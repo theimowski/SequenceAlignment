@@ -3,7 +3,6 @@
 type Nucleotide = A | C | G | T
 type Sequence = Nucleotide[]
 type Nucleotide' = Nucl of Nucleotide | Break
-type Sequence' = list<Nucleotide'>
 type BreakPenalty = int -> float
 type Similarity = Nucleotide * Nucleotide -> float
 type Alignment = float
@@ -12,7 +11,7 @@ type private Trail = char * int * int
 
 let alignTwoWithPenalty 
     ((fstSeq : Sequence, sndSeq : Sequence), sim : Similarity, p : BreakPenalty)
-    : Alignment * (Sequence' * Sequence') =
+    : Alignment * list<Nucleotide' * Nucleotide'> =
         
     let len1, len2 = fstSeq.Length, sndSeq.Length
     let initA2D() : (float*option<Trail>)[,] = 
@@ -46,25 +45,40 @@ let alignTwoWithPenalty
             a.[i,j] <- countA(i,j)
             b.[i,j] <- countB(i,j)
             c.[i,j] <- countC(i,j)
-            s.[i,j] <- List.maxBy fst [a.[i,j]; b.[i,j]; c.[i,j]]
+            
+            let (v,t) = 
+                [fst a.[i,j], 'a'
+                 fst b.[i,j], 'b'
+                 fst c.[i,j], 'c' 
+                ] 
+                |> List.maxBy fst
 
-    let rec x ((acc1,acc2),(i_prev,j_prev),trail) =
-        printfn "%O" trail  
+            s.[i,j] <- v, Some(t,i,j)
+
+    let rec x (acc,(i_prev,j_prev),trail : option<Trail>) =
+        printfn "%O" (trail)  
         match trail with
         | Some('a',i,j) -> 
-            [],[]
+            let indels = 
+                [j..j_prev]
+                |> List.map (fun j -> Break, Nucl sndSeq.[j-1])
+            x (indels @ acc, (i,j), snd a.[i,j])
         | Some('b',i,j) -> 
-            [],[]
+            let indels = 
+                [i..i_prev]
+                |> List.map (fun i -> Nucl fstSeq.[i-1], Break)
+            x (indels @ acc, (i,j), snd b.[i,j])
         | Some('c',i,j) -> 
-            x ((Nucl fstSeq.[i-1]::acc1, Nucl sndSeq.[j-1]::acc2), (i-1,j-1), snd s.[i-1,j-1])
-        | None -> acc1,acc2
+            x ((Nucl fstSeq.[i-1],Nucl sndSeq.[j-1])::acc, (i-1,j-1), snd s.[i-1,j-1])
+        | None -> acc
         | _ -> failwith "unexpected trail"
-            
+    
+    
+    let sequence = x([], (len1,len2), snd s.[len1,len2])
+    fst s.[len1,len2], sequence
 
-    fst s.[len1,len2], x (([],[]),(len1,len2), snd s.[len1,len2])
-
-let fstSeq = [|C;A;G;C;C|]
-let sndSeq = [|C;C;T;G|]
+let fstSeq = [|C;A;G;C|]//;C|]
+let sndSeq = [|C|]//;C;T;G|]
 let p = fun (x:int) -> -1. - (1. * float x)
 let sim (x,y) = if x = y then 2. else 0.
 
