@@ -55,26 +55,28 @@ let alignTwoWithPenalty
 
             s.[i,j] <- v, Some(t,i,j)
 
-    let rec x (acc,(i_prev,j_prev),trail : option<Trail>) =
+    let rec x (acc,trail : option<Trail>) =
         printfn "%O" (trail)  
         match trail with
         | Some('a',i,j) -> 
+            let j_prev = match snd a.[i,j] with Some(_,_,j) -> j | None -> j
             let indels = 
-                [j..j_prev]
+                [j_prev+1..j]
                 |> List.map (fun j -> Break, Nucl sndSeq.[j-1])
-            x (indels @ acc, (i,j), snd a.[i,j])
+            x (indels @ acc, snd a.[i,j])
         | Some('b',i,j) -> 
+            let i_prev = match snd b.[i,j] with Some(_,i,_) -> i | None -> i
             let indels = 
-                [i..i_prev]
+                [i_prev+1..i]
                 |> List.map (fun i -> Nucl fstSeq.[i-1], Break)
-            x (indels @ acc, (i,j), snd b.[i,j])
+            x (indels @ acc, snd b.[i,j])
         | Some('c',i,j) -> 
-            x ((Nucl fstSeq.[i-1],Nucl sndSeq.[j-1])::acc, (i-1,j-1), snd s.[i-1,j-1])
+            x ((Nucl fstSeq.[i-1],Nucl sndSeq.[j-1])::acc, snd s.[i-1,j-1])
         | None -> acc
         | _ -> failwith "unexpected trail"
     
     
-    let sequence = x([], (len1,len2), snd s.[len1,len2])
+    let sequence = x([], snd s.[len1,len2])
     fst s.[len1,len2], sequence
 
 let fstSeq = [|C;A;G;C|]//;C|]
