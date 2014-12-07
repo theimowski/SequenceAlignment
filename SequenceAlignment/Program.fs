@@ -75,7 +75,36 @@ let alignTwoWithPenalty
     let sequence = unfoldTrail([], snd s.[len1,len2])
     fst s.[len1,len2], sequence
 
+let formatNucl = function
+    | Break -> "-"
+    | Nucl x -> 
+        match x with
+        | A -> "A"
+        | C -> "C"
+        | G -> "G"
+        | T -> "T"
+
+let formatOutput (alignment, sequence) = 
+    let f,s = sequence |> List.unzip
+    f |> List.map formatNucl |> String.concat "" |> printfn "%s"
+    s |> List.map formatNucl |> String.concat "" |> printfn "%s"
+    printfn "similarity: %f" alignment
+
+let readInputSequence() = 
+    let parse = function
+    | 'A' -> Some A
+    | 'C' -> Some C
+    | 'G' -> Some G
+    | 'T' -> Some T
+    | _ -> None
+    let line = Console.ReadLine()
+    line |> Seq.choose parse |> Seq.toArray
+
 [<EntryPoint>]
 let main argv = 
-    printfn "%A" argv
-    0 // return an integer exit code
+    let p = fun (x:int) -> -1. - (1. * float x)
+    let sim (x,y) = if x = y then 2. else 0.
+    let f, s = readInputSequence(), readInputSequence()
+    alignTwoWithPenalty((f,s), sim, p) |> formatOutput
+
+    0
