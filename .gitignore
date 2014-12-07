@@ -1,5 +1,5 @@
 *bin
 *obj
-/packages
+src/packages
 *.suo
 *.DotSettings.user
