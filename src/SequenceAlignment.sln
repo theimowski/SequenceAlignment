@@ -5,7 +5,7 @@ VisualStudioVersion = 12.0.30324.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SequenceAlignment", "SequenceAlignment\SequenceAlignment.fsproj", "{EB08E6E7-83E5-48D3-8C50-50E223BA9DDD}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SequenceAlignment.Tests", "SequenceAlignment.Tests\SequenceAlignment.Tests.fsproj", "{DD9EDE7B-4ADB-4BFA-8E0F-BCB8F58CF70F}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SequenceAlignment.Tests", "..\tests\SequenceAlignment.Tests\SequenceAlignment.Tests.fsproj", "{DD9EDE7B-4ADB-4BFA-8E0F-BCB8F58CF70F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
