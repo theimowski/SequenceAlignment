@@ -1,8 +1,5 @@
 ﻿module SequenceAlignment.Tests
 
-open Xunit
-
-open FsCheck
 open FsCheck.Xunit
 
 let p = fun (x:int) -> -1. - (1. * float x)

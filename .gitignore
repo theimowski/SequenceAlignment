@@ -3,3 +3,4 @@
 packages
 *.suo
 *.DotSettings.user
+.paket/paket.exe
