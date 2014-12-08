@@ -11,7 +11,6 @@ type Alignment = float
 
 type Trail<'a> = Trail of ArrayCell<'a>[,] * int * int
 and ArrayCell<'a> = 'a * option<Trail<'a>>
-
 type AlignmentCell = ArrayCell<Alignment>
 
 let highest(arrays: list<ArrayCell<'a>[,]>, i, j) : ArrayCell<'a> =
@@ -100,11 +99,22 @@ let readInputSequence() =
     let line = Console.ReadLine()
     line |> Seq.choose parse |> Seq.toArray
 
+let readSimilarity() : Similarity =
+    let parseLine (s:string) = s.Split([|';'|]) |> Array.map float
+    let lookup = 
+        [A;C;G;T] 
+        |> List.map (fun n -> n, Console.ReadLine() |> parseLine)
+        |> Map.ofList
+    (fun (f,s) ->
+        let f',s' = max f s, min f s
+        let index = match s' with A -> 0 | C -> 1 | G -> 2 | T -> 3
+        lookup.[f'].[index])
+
 [<EntryPoint>]
 let main argv = 
     let p = fun (x:int) -> -1. - (1. * float x)
-    let sim (x,y) = if x = y then 2. else 0.
     let f, s = readInputSequence(), readInputSequence()
+    let sim = readSimilarity()
     alignTwoWithPenalty((f,s), sim, p) |> formatOutput
 
     0

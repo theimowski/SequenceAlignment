@@ -58,9 +58,9 @@ GTCTTAAAAGCT</StartArguments>
   <ItemGroup>
     <Compile Include="Program.fs" />
     <None Include="App.config" />
-    <Content Include="input.txt">
+    <None Include="input">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
