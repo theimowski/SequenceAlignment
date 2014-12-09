@@ -129,7 +129,55 @@ let NeedlemanWunsch
 let sim (a,b) = if a = b  then 2. else -1.
 NeedlemanWunsch([|A;G;T;A;C;G;C;A|],[|T;A;T;G;C|],sim,-2.)
 
+let inline lastRow (x: _[,]) = x.[Array2D.length1 x-1,*]
 
+let inline splitBefore i (x: _[]) = 
+    match i with 
+    | _ when i < 1 -> [||], x
+    | _ when i > x.Length-1 -> x, [||]
+    | _ -> x.[0..i-1], x.[i..(x.Length-1)]
+
+let Hirschberg
+    (fstSeq : Sequence, sndSeq: Sequence,sim : Similarity, indelCost : float)
+    : Alignment * list<Nucleotide' * Nucleotide'> =
+
+    let rec Hirschberg' (fstSeq,sndSeq) = 
+
+        match fstSeq,sndSeq with
+        | [|f|], [|s|] -> sim(f,s), [Nucl f,Nucl s]
+        | [||], _ -> 
+            indelCost * float sndSeq.Length, 
+            sndSeq |> Array.map (fun s -> Break, Nucl s) |> List.ofArray
+        | _, [||] -> 
+            indelCost * float fstSeq.Length, 
+            fstSeq |> Array.map (fun f -> Nucl f, Break) |> List.ofArray
+        | _ -> 
+            let imid = fstSeq.Length / 2
+            let f1,f2 = fstSeq |> splitBefore imid
+        
+            let upper = 
+                NeedlemanWunsch(f1,sndSeq,sim,indelCost) 
+                |> lastRow
+            let lower =
+                NeedlemanWunsch(Array.rev f2,
+                                Array.rev sndSeq, sim, indelCost)
+                |> lastRow
+
+            let jmid = 
+                (upper,lower |> Array.rev) 
+                ||> Array.map2 (+)
+                |> Array.mapi (fun i v -> i,v)
+                |> Array.maxBy snd
+                |> fst
+        
+            let s1,s2 = sndSeq |> splitBefore jmid
+            let a1, l1 = Hirschberg'(f1,s1)
+            let a2, l2 = Hirschberg'(f2,s2)
+            a1 + a2, l1 @ l2
+
+    Hirschberg' (fstSeq,sndSeq)
+
+Hirschberg([|A;G;T;A;C;G;C;A|],[|T;A;T;G;C|],sim,-2.) |> formatOutput
 
 [<EntryPoint>]
 let main argv = 
