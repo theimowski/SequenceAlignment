@@ -141,16 +141,16 @@ let Hirschberg
     (fstSeq : Sequence, sndSeq: Sequence,sim : Similarity, indelCost : float)
     : Alignment * list<Nucleotide' * Nucleotide'> =
 
-    let rec Hirschberg' (fstSeq,sndSeq) = 
+    let rec Hirschberg' (fstSeq,sndSeq,cont) = 
 
         match fstSeq,sndSeq with
-        | [|f|], [|s|] -> sim(f,s), [Nucl f,Nucl s]
+        | [|f|], [|s|] -> cont(sim(f,s), [Nucl f,Nucl s])
         | [||], _ -> 
-            indelCost * float sndSeq.Length, 
-            sndSeq |> Array.map (fun s -> Break, Nucl s) |> List.ofArray
+            cont(indelCost * float sndSeq.Length, 
+                 sndSeq |> Array.map (fun s -> Break, Nucl s) |> List.ofArray)
         | _, [||] -> 
-            indelCost * float fstSeq.Length, 
-            fstSeq |> Array.map (fun f -> Nucl f, Break) |> List.ofArray
+            cont(indelCost * float fstSeq.Length, 
+                 fstSeq |> Array.map (fun f -> Nucl f, Break) |> List.ofArray)
         | _ -> 
             let imid = fstSeq.Length / 2
             let f1,f2 = fstSeq |> splitBefore imid
@@ -169,13 +169,14 @@ let Hirschberg
                 |> Array.mapi (fun i v -> i,v)
                 |> Array.maxBy snd
                 |> fst
-        
+            
             let s1,s2 = sndSeq |> splitBefore jmid
-            let a1, l1 = Hirschberg'(f1,s1)
-            let a2, l2 = Hirschberg'(f2,s2)
-            a1 + a2, l1 @ l2
+            
+            Hirschberg' (f1,s1,(fun (lA,lL) ->
+                Hirschberg' (f2,s2,(fun (rA,rL) ->
+                    cont(lA+rA,lL@rL)))))
 
-    Hirschberg' (fstSeq,sndSeq)
+    Hirschberg' (fstSeq,sndSeq,id)
 
 Hirschberg([|A;G;T;A;C;G;C;A|],[|T;A;T;G;C|],sim,-2.) |> formatOutput
 
