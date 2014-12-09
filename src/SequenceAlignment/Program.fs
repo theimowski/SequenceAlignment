@@ -110,6 +110,27 @@ let readSimilarity() : Similarity =
         let index = match s' with A -> 0 | C -> 1 | G -> 2 | T -> 3
         lookup.[f'].[index])
 
+
+let NeedlemanWunsch
+    (fstSeq : Sequence, sndSeq: Sequence, sim : Similarity, indelCost : float) 
+    : Alignment[,] =
+    let len1,len2 = fstSeq.Length, sndSeq.Length
+    let array = Array2D.zeroCreate (len1+1) (len2+1)
+    [1..len1] |> List.iter (fun i -> array.[i,0] <- float i * indelCost)
+    [1..len2] |> List.iter (fun j -> array.[0,j] <- float j * indelCost)
+    for i in 1..len1 do
+        for j in 1..len2 do
+            array.[i,j] <- [array.[i-1,j-1] + sim(fstSeq.[i-1],sndSeq.[j-1])
+                            array.[i-1,j]+indelCost
+                            array.[i,j-1]+indelCost
+                            ] |> List.max
+    array
+
+let sim (a,b) = if a = b  then 2. else -1.
+NeedlemanWunsch([|A;G;T;A;C;G;C;A|],[|T;A;T;G;C|],sim,-2.)
+
+
+
 [<EntryPoint>]
 let main argv = 
     let p = fun (x:int) -> -1. - (1. * float x)
