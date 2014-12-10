@@ -19,15 +19,16 @@ let formatOutput (alignment, sequence) =
     s |> formatSeq |> printfn "%s"
     printfn "similarity: %f" alignment
 
-let readInputSequence() = 
-    let parse = function
+let parse = function
     | 'A' -> Some A
     | 'C' -> Some C
     | 'G' -> Some G
     | 'T' -> Some T
     | _ -> None
-    let line = Console.ReadLine()
-    line |> Seq.choose parse |> Seq.toArray
+
+let parseLine : string -> Nucleotide[] = Seq.choose parse >> Seq.toArray
+
+let readInputSequence() = Console.ReadLine() |> parseLine
 
 let readSimilarity() : Similarity =
     let parseLine (s:string) = s.Split([|';'|]) |> Array.map float

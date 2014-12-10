@@ -17,6 +17,25 @@ let NeedlemanWunsch
 
 let inline lastRow (x: _[,]) = x.[Array2D.length1 x-1,*]
 
+let NeedlemanWunschLast
+    (fstSeq : Sequence, sndSeq: Sequence, sim : Similarity, indelCost : float) 
+    : Alignment[] =
+    let len1,len2 = fstSeq.Length, sndSeq.Length
+    let rec iterRow (i,prev_row : float[]) = 
+        match i with
+        | d when d = len1 + 1 -> prev_row
+        | _ -> 
+            let cur_row = Array.zeroCreate (len2+1)
+            cur_row.[0] <- float i * indelCost
+            for j in 1..len2 do
+                cur_row.[j] <- [prev_row.[j-1] + sim(fstSeq.[i-1],sndSeq.[j-1])
+                                prev_row.[j] + indelCost
+                                cur_row.[j-1]+indelCost
+                                ] |> List.max
+            iterRow (i+1, cur_row)
+
+    iterRow(1,Array.init (len2+1) (fun i -> float i * indelCost))
+
 let inline splitBefore i (x: _[]) = 
     match i with 
     | _ when i < 1 -> [||], x
@@ -40,14 +59,15 @@ let run
         | _ -> 
             let imid = fstSeq.Length / 2
             let f1,f2 = fstSeq |> splitBefore imid
-        
+
             let upper = 
-                NeedlemanWunsch(f1,sndSeq,sim,indelCost) 
-                |> lastRow
+                NeedlemanWunschLast(f1,sndSeq,sim,indelCost) 
             let lower =
-                NeedlemanWunsch(Array.rev f2,
+                NeedlemanWunschLast(Array.rev f2,
                                 Array.rev sndSeq, sim, indelCost)
-                |> lastRow
+
+            printfn "%A" upper
+            printfn "%A" lower
 
             let jmid = 
                 (upper,lower |> Array.rev) 
