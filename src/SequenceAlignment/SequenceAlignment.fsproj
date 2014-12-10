@@ -56,6 +56,9 @@ GTCTTAAAAGCT</StartArguments>
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
+    <Compile Include="Types.fs" />
+    <Compile Include="Gotoh.fs" />
+    <Compile Include="Hirschberg.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <None Include="input">
