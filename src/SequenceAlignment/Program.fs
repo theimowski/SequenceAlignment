@@ -46,8 +46,11 @@ let readSimilarity() : Similarity =
 [<EntryPoint>]
 let main argv = 
     let p = fun (x:int) -> -1. - (1. * float x)
+    use _in = new IO.StreamReader("input")
+    Console.SetIn(_in)
+
     let f, s = readInputSequence(), readInputSequence()
     let sim = readSimilarity()
-    Gotoh.run((f,s), sim, p) |> formatOutput
+    Hirschberg.run(f,s,sim,-2.) |> formatOutput
 
     0

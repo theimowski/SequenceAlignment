@@ -33,15 +33,33 @@ let NeedlemanWunschLast
         Array.blit cur_row 0 prev_row 0 (len2+1)
             
     cur_row
-
+    
 let inline splitBefore i (x: _[]) = 
     match i with 
     | _ when i < 1 -> [||], x
     | _ when i > x.Length-1 -> x, [||]
     | _ -> x.[0..i-1], x.[i..(x.Length-1)]
 
+let split 
+    (fstSeq : Sequence, sndSeq: Sequence,sim : Similarity, indelCost : float) =
+    let imid = fstSeq.Length / 2
+    let f1,f2 = fstSeq |> splitBefore imid
+
+    let upper = NeedlemanWunschLast(f1,sndSeq,sim,indelCost) 
+    let lower = NeedlemanWunschLast(Array.rev f2, Array.rev sndSeq, sim, indelCost)
+
+    let jmid = 
+        (upper,lower |> Array.rev) 
+        ||> Array.map2 (+)
+        |> Array.mapi (fun i v -> i,v)
+        |> Array.maxBy snd
+        |> fst
+                        
+    let s1,s2 = sndSeq |> splitBefore jmid
+    f1,f2,s1,s2
+
 let run
-    (fstSeq : Sequence, sndSeq: Sequence,sim : Similarity, indelCost : float)
+    (f : Sequence, s: Sequence,sim : Similarity, indelCost : float)
     : Alignment * list<Nucleotide' * Nucleotide'> =
     let rec run' (fstSeq,sndSeq,cont) = 
 
@@ -54,35 +72,10 @@ let run
             cont(indelCost * float fstSeq.Length, 
                  fstSeq |> Array.map (fun f -> Nucl f, Break) |> List.ofArray)
         | _ -> 
-            let imid = fstSeq.Length / 2
-            let f1,f2 = fstSeq |> splitBefore imid
-            printfn "before"
-
-            let upper = 
-                NeedlemanWunschLast(f1,sndSeq,sim,indelCost) 
-            let lower =
-                NeedlemanWunschLast(Array.rev f2,
-                                Array.rev sndSeq, sim, indelCost)
-
-            printfn "%A" upper
-            printfn "%A" lower
-
-            let jmid = 
-                (upper,lower |> Array.rev) 
-                ||> Array.map2 (+)
-                |> Array.mapi (fun i v -> i,v)
-                |> Array.maxBy snd
-                |> fst
-            
-            let s1,s2 = sndSeq |> splitBefore jmid
+            let f1,f2,s1,s2 = split(fstSeq,sndSeq,sim,indelCost)
             
             run' (f1,s1,(fun (lA,lL) ->
                 run' (f2,s2,(fun (rA,rL) ->
                     cont(lA+rA,lL@rL)))))
 
-    run' (fstSeq,sndSeq,id)
-//#time
-//run([|A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A;G;T;A;C;G;C;A|],
-//           [|T;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;A;T;G;C;G;C;T;A;T;G;C;G;C;T;A|]
-//           ,sim,-2.) |> formatOutput
-//#time
+    run' (f,s,id)
