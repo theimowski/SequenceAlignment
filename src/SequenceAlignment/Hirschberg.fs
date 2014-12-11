@@ -21,20 +21,18 @@ let NeedlemanWunschLast
     (fstSeq : Sequence, sndSeq: Sequence, sim : Similarity, indelCost : float) 
     : Alignment[] =
     let len1,len2 = fstSeq.Length, sndSeq.Length
-    let rec iterRow (i,prev_row : float[]) = 
-        match i with
-        | d when d = len1 + 1 -> prev_row
-        | _ -> 
-            let cur_row = Array.zeroCreate (len2+1)
-            cur_row.[0] <- float i * indelCost
-            for j in 1..len2 do
-                cur_row.[j] <- [prev_row.[j-1] + sim(fstSeq.[i-1],sndSeq.[j-1])
-                                prev_row.[j] + indelCost
-                                cur_row.[j-1]+indelCost
-                                ] |> List.max
-            iterRow (i+1, cur_row)
-
-    iterRow(1,Array.init (len2+1) (fun i -> float i * indelCost))
+    let prev_row = Array.init (len2+1) (fun j -> float j * indelCost)
+    let cur_row = Array.copy prev_row
+    for i in 1..len1 do 
+        cur_row.[0] <- float i * indelCost
+        for j in 1..len2 do
+            cur_row.[j] <- [prev_row.[j-1] + sim(fstSeq.[i-1],sndSeq.[j-1])
+                            prev_row.[j] + indelCost
+                            cur_row.[j-1]+indelCost
+                            ] |> List.max
+        Array.blit cur_row 0 prev_row 0 (len2+1)
+            
+    cur_row
 
 let inline splitBefore i (x: _[]) = 
     match i with 
@@ -45,7 +43,6 @@ let inline splitBefore i (x: _[]) =
 let run
     (fstSeq : Sequence, sndSeq: Sequence,sim : Similarity, indelCost : float)
     : Alignment * list<Nucleotide' * Nucleotide'> =
-
     let rec run' (fstSeq,sndSeq,cont) = 
 
         match fstSeq,sndSeq with
@@ -59,6 +56,7 @@ let run
         | _ -> 
             let imid = fstSeq.Length / 2
             let f1,f2 = fstSeq |> splitBefore imid
+            printfn "before"
 
             let upper = 
                 NeedlemanWunschLast(f1,sndSeq,sim,indelCost) 

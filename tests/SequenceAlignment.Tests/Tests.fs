@@ -80,23 +80,23 @@ let ``Needleman-Wunsch gives correct result`` () =
 let parse = function '-' -> Break | 'A' -> Nucl A | 'C' -> Nucl C | 'G' -> Nucl G | 'T' -> Nucl T | _ -> failwith "parse error" 
 
 [<Theory>]
-[<InlineData(
-    "AGTACGCA",
-    "TATGC",
-    -2.,
-
-    1.,
-    "AGTACGCA",
-    "--TATGC-")>]
-
-[<InlineData(
-    "ACTGACCT",
-    "TGTCC",
-    -1.,
-
-    4.,
-    "ACTGACCT",
-    "--TGTCC-")>]
+//[<InlineData(
+//    "AGTACGCA",
+//    "TATGC",
+//    -2.,
+//
+//    1.,
+//    "AGTACGCA",
+//    "--TATGC-")>]
+//
+//[<InlineData(
+//    "ACTGACCT",
+//    "TGTCC",
+//    -1.,
+//
+//    4.,
+//    "ACTGACCT",
+//    "--TGTCC-")>]
 
 [<InlineData(
     "ACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCT",
