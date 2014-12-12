@@ -21,8 +21,6 @@ let split
         |> Array.maxBy snd
         |> fst
                         
-    printfn "%d %d %A %A" imid jmid fstSeq sndSeq
-
     let s1,s2 = sndSeq |> splitBefore jmid
     f1,f2,s1,s2
 
@@ -32,7 +30,7 @@ let run
     let rec run' (fstSeq,sndSeq,cont) = 
 
         match fstSeq,sndSeq with
-        | [|f|], [|s|] -> cont(sim(f,s), [Nucl f,Nucl s])
+        | [|_|], _ | _, [|_|] -> cont(NeedlemanWunsch.run(fstSeq,sndSeq,sim,indelCost))
         | [||], _ -> 
             cont(indelCost * float sndSeq.Length, 
                  sndSeq |> Array.map (fun s -> Break, Nucl s) |> List.ofArray)

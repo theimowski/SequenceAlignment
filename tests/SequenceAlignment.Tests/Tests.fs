@@ -40,13 +40,25 @@ let ``Gotoh - no double breaks in sequence`` (fstSeq : Sequence, sndSeq : Sequen
     |> List.forall (fun (f,s) -> not (f = Break && s = Break))
 
 [<Property>]
-let ``NeedlemanWunschLast returns correct last row`` (fstSeq : Sequence, sndSeq : Sequence) =
-    let inline lastRow (x: _[,]) = x.[Array2D.length1 x-1,*]
-    
+let ``Needleman-Wunsch - removing breaks gives input`` (fstSeq : Sequence, sndSeq : Sequence, indelCost : float) =
+    let _,sequence =  NeedlemanWunsch.run(fstSeq,sndSeq, sim, indelCost)
+    let f,s = sequence |> List.unzip
+    f |> List.filter ((<>) Break) = (fstSeq |> Array.toList |> List.map Nucl) &&
+    s |> List.filter ((<>) Break) = (sndSeq |> Array.toList |> List.map Nucl)
+
+[<Property>]
+let ``Needleman-Wunsch - no double breaks in sequence`` (fstSeq : Sequence, sndSeq : Sequence, indelCost : float) =
+    let _,sequence =  NeedlemanWunsch.run(fstSeq,sndSeq, sim, indelCost)
+    sequence
+    |> List.forall (fun (f,s) -> not (f = Break && s = Break))
+
+
+[<Property>]
+let ``Needleman-Wunsch last-row equals last row of 2D array`` (fstSeq : Sequence, sndSeq : Sequence) =
     let a2d =  NeedlemanWunsch.runScore(fstSeq,sndSeq,sim,-2.)
     let a = NeedlemanWunsch.runScoreLastRow(fstSeq,sndSeq,sim,-2.)
 
-    a |> shouldEqual (lastRow a2d)
+    a |> shouldEqual (a2d.[Array2D.length1 a2d-1,*])
 
 [<Property>]
 let ``Hirschberg - split doesn't return empty partition`` 
@@ -58,19 +70,19 @@ let ``Hirschberg - split doesn't return empty partition``
     let f1,f2,s1,s2 = Hirschberg.split(fstSeq,sndSeq,sim,indelCost)
     (f1 |> notEmpty || s1 |> notEmpty) && (f2 |> notEmpty || s2 |> notEmpty)
 
-//[<Property>]
-//let ``Hirschberg - removing breaks gives input`` (fstSeq : Sequence, sndSeq : Sequence, indelCost : float) =
-//    let _,sequence =  Hirschberg.run(fstSeq,sndSeq, sim, indelCost)
-//    let f,s = sequence |> List.unzip
-//    f |> List.filter ((<>) Break) = (fstSeq |> Array.toList |> List.map Nucl) &&
-//    s |> List.filter ((<>) Break) = (sndSeq |> Array.toList |> List.map Nucl)
+[<Property>]
+let ``Hirschberg - removing breaks gives input`` (fstSeq : Sequence, sndSeq : Sequence, indelCost : float) =
+    let _,sequence =  Hirschberg.run(fstSeq,sndSeq, sim, indelCost)
+    let f,s = sequence |> List.unzip
+    f |> List.filter ((<>) Break) = (fstSeq |> Array.toList |> List.map Nucl) &&
+    s |> List.filter ((<>) Break) = (sndSeq |> Array.toList |> List.map Nucl)
 
-//
-//[<Property>]
-//let ``Hirschberg - no double breaks in sequence`` (fstSeq : Sequence, sndSeq : Sequence, indelCost : float) =
-//    let _,sequence =  Hirschberg.run(fstSeq,sndSeq, sim, indelCost)
-//    sequence
-//    |> List.forall (fun (f,s) -> not (f = Break && s = Break))
+
+[<Property>]
+let ``Hirschberg - no double breaks in sequence`` (fstSeq : Sequence, sndSeq : Sequence, indelCost : float) =
+    let _,sequence =  Hirschberg.run(fstSeq,sndSeq, sim, indelCost)
+    sequence
+    |> List.forall (fun (f,s) -> not (f = Break && s = Break))
 
 [<Fact>]
 let ``Needleman-Wunsch gives correct score`` () =
@@ -88,6 +100,35 @@ let ``Needleman-Wunsch gives correct score`` () =
     let sim (a,b) = if a = b  then 2. else -1.
 
     Assert.Equal(expected, NeedlemanWunsch.runScore([|A;G;T;A;C;G;C;A|],[|T;A;T;G;C|],sim,-2.))
+
+
+[<Theory>]
+[<InlineData(
+    "AGTACGCA",
+    "TATGC",
+    -2.,
+
+    1.,
+    "AGTACGCA",
+    "--TATGC-")>]
+
+[<InlineData(
+    "ACTGACCT",
+    "TGTCC",
+    -1.,
+
+    4.,
+    "ACTGACCT",
+    "--TGTCC-")>]
+let ``Needleman-Wunsch gives correct result`` (in1, in2, indelCost, expectedSim, expectedFst, expectedSnd) =
+    let sim (a,b) = if a = b  then 2. else -1.
+
+    let a,seq = NeedlemanWunsch.run(Program.parseLine in1, Program.parseLine in2, sim, indelCost)
+    let fstSeq,sndSeq = seq |> List.unzip
+
+    Assert.Equal(expectedSim, a)
+    Program.formatSeq fstSeq |> shouldEqual expectedFst
+    Program.formatSeq sndSeq |> shouldEqual expectedSnd
 
 let parse = function '-' -> Break | 'A' -> Nucl A | 'C' -> Nucl C | 'G' -> Nucl G | 'T' -> Nucl T | _ -> failwith "parse error" 
 
@@ -110,14 +151,14 @@ let parse = function '-' -> Break | 'A' -> Nucl A | 'C' -> Nucl C | 'G' -> Nucl 
     "ACTGACCT",
     "--TGTCC-")>]
 
-//[<InlineData(
-//    "ACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCTACTGACCT",
-//    "TGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCCTGTCC",
-//    -1.,
-//
-//    4.,
-//    "ACTGACCT?",
-//    "--TGTCC-?")>]
+[<InlineData(
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    -1.,
+
+    1080.,
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")>]
 
 let ``Hirschberg gives correct result`` (in1, in2, indelCost, expectedSim, expectedFst, expectedSnd) =
             
@@ -126,8 +167,8 @@ let ``Hirschberg gives correct result`` (in1, in2, indelCost, expectedSim, expec
     let a,seq = Hirschberg.run(Program.parseLine in1, Program.parseLine in2, sim, indelCost)
     let fstSeq,sndSeq = seq |> List.unzip
 
-    //Assert.Equal(expectedSim, a)
-    //Program.formatSeq fstSeq |> shouldEqual expectedFst
+    Assert.Equal(expectedSim, a)
+    Program.formatSeq fstSeq |> shouldEqual expectedFst
     Program.formatSeq sndSeq |> shouldEqual expectedSnd
 
 
