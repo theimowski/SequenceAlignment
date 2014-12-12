@@ -12,14 +12,14 @@ let shouldEqual (x : 'a) (y : 'a) = Assert.Equal<'a>(x, y)
 
 [<Property>]
 let ``Gotoh - removing breaks gives input`` (fstSeq : Sequence, sndSeq : Sequence) =
-    let _,sequence =  Gotoh.run((fstSeq,sndSeq), sim, p)
+    let _,sequence =  Gotoh.run(fstSeq,sndSeq, sim, p)
     let f,s = sequence |> List.unzip
     f |> List.filter ((<>) Break) = (fstSeq |> Array.toList |> List.map Nucl) &&
     s |> List.filter ((<>) Break) = (sndSeq |> Array.toList |> List.map Nucl)
 
 [<Property>]
 let ``Gotoh - alignment is correct`` (fstSeq : Sequence, sndSeq : Sequence) =
-    let alignment,sequence =  Gotoh.run((fstSeq,sndSeq), sim, p)
+    let alignment,sequence =  Gotoh.run(fstSeq,sndSeq, sim, p)
     let rec count (sequence,breakLength,sum) =
         match sequence with 
         | [] -> 
@@ -35,7 +35,7 @@ let ``Gotoh - alignment is correct`` (fstSeq : Sequence, sndSeq : Sequence) =
 
 [<Property>]
 let ``Gotoh - no double breaks in sequence`` (fstSeq : Sequence, sndSeq : Sequence) =
-    let _,sequence =  Gotoh.run((fstSeq,sndSeq), sim, p)
+    let _,sequence =  Gotoh.run(fstSeq,sndSeq, sim, p)
     sequence
     |> List.forall (fun (f,s) -> not (f = Break && s = Break))
 

@@ -1,6 +1,5 @@
 source https://nuget.org/api/v2
 
-nuget FAKE
 nuget FsCheck
 nuget FsCheck.Xunit
 nuget xunit.extensions

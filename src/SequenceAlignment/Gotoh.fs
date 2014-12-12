@@ -12,10 +12,10 @@ let highest(arrays: list<ArrayCell<'a>[,]>, i, j) : ArrayCell<'a> =
     |> List.maxBy fst
     |> (fun (value,array) -> value, Some(Trail (array,i,j)))
 
-let inline addFst x (f,s as tuple) = f + x, s
+let inline addFst x (f,s) = f + x, s
 
 let run 
-    ((fstSeq : Sequence, sndSeq : Sequence), sim : Similarity, p : BreakPenalty)
+    (fstSeq : Sequence, sndSeq : Sequence, sim : Similarity, p : BreakPenalty)
     : Alignment * list<Nucleotide' * Nucleotide'> =
         
     let len1, len2 = fstSeq.Length, sndSeq.Length
@@ -32,6 +32,9 @@ let run
         |> List.maxBy fst
     let countC(i,j) : AlignmentCell =
         fst s.[i-1,j-1] + sim(fstSeq.[i-1], sndSeq.[j-1]), Some(Trail(c,i,j))
+
+    logV "initial state"
+    logV "%A" a
 
     s.[0,0] <- 0., None
     for i in 1..len1 do 

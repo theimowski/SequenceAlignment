@@ -28,7 +28,7 @@ let parse = function
 
 let parseLine : string -> Nucleotide[] = Seq.choose parse >> Seq.toArray
 
-let readInputSequence() = Console.ReadLine() |> parseLine
+let readSequence() = Console.ReadLine() |> parseLine
 
 let readSimilarity() : Similarity =
     let parseLine (s:string) = s.Split([|';'|]) |> Array.map float
@@ -42,15 +42,27 @@ let readSimilarity() : Similarity =
         lookup.[f'].[index])
 
 
-
 [<EntryPoint>]
 let main argv = 
-    let p = fun (x:int) -> -1. - (1. * float x)
+    let penaltyBreak x = -1. - (1. * float x)
+    let indelCost = -2.
+
+#if DEBUG
     use _in = new IO.StreamReader("input")
     Console.SetIn(_in)
+#endif
+    
+    Types.verbose <- 
+        argv |> Array.exists ((=) "-v") ||
+        argv |> Array.exists ((=) "--verbose")
 
-    let f, s = readInputSequence(), readInputSequence()
-    let sim = readSimilarity()
-    Hirschberg.run(f,s,sim,-2.) |> formatOutput
+    match argv |> Array.toList with
+    | "Gotoh" :: _ -> 
+        Gotoh.run(readSequence(), readSequence(), readSimilarity(), penaltyBreak) |> formatOutput
+    | "NeedlemanWunsch" :: _ ->
+        NeedlemanWunsch.run(readSequence() ,readSequence(), readSimilarity(), indelCost) |> formatOutput
+    | "Hirschberg" :: _ ->
+        Hirschberg.run(readSequence(), readSequence(), readSimilarity(), indelCost) |> formatOutput
+    | _ -> printfn "usage: SequenceAlignment.exe [Gotoh|NeedlemanWunsch|Hirschberg] [-v|--verbose]"
 
     0
