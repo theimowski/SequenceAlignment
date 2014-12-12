@@ -1,6 +1,7 @@
 ﻿module SequenceAlignment.Tests
 
 open Xunit
+open FsCheck
 open FsCheck.Xunit
 open Xunit.Extensions
 
@@ -40,24 +41,22 @@ let ``Gotoh - no double breaks in sequence`` (fstSeq : Sequence, sndSeq : Sequen
 
 [<Property>]
 let ``NeedlemanWunschLast returns correct last row`` (fstSeq : Sequence, sndSeq : Sequence) =
-    let a2d =  Hirschberg.NeedlemanWunsch(fstSeq,sndSeq,sim,-2.)
-    let a = Hirschberg.NeedlemanWunschLast(fstSeq,sndSeq,sim,-2.)
-
-    a |> shouldEqual (Hirschberg.lastRow a2d)
-
-
-let ``Hirschberg - split doesn't return empty partition`` 
-    (fstSeq : Sequence, sndSeq : Sequence, indelCost : float) =
+    let inline lastRow (x: _[,]) = x.[Array2D.length1 x-1,*]
     
-    let notEmpty = Array.isEmpty >> not
+    let a2d =  NeedlemanWunsch.runScore(fstSeq,sndSeq,sim,-2.)
+    let a = NeedlemanWunsch.runScoreLastRow(fstSeq,sndSeq,sim,-2.)
 
-    let f1,f2,s1,s2 = Hirschberg.split(fstSeq,sndSeq,sim,indelCost)
-    true ==> (fun _ -> f1 |> notEmpty || s1 |> notEmpty && f2 |> notEmpty || s2 |> notEmpty)
+    a |> shouldEqual (lastRow a2d)
 
 [<Property>]
-let ``Hirschberg - split doesn't return empty partition2``  
-    (fstSeq : Sequence, sndSeq : Sequence, indelCost : float) : bool =
-    fstSeq <> [||] ==> (``Hirschberg - split doesn't return empty partition``(fstSeq,sndSeq,indelCost))
+let ``Hirschberg - split doesn't return empty partition`` 
+    (fstSeq : Sequence, sndSeq : Sequence, indelCost : float) =
+    let notEmpty = Array.isEmpty >> not
+    
+    (fstSeq |> notEmpty && sndSeq |> notEmpty && (fstSeq.Length > 1 && sndSeq.Length > 1)) ==>
+    
+    let f1,f2,s1,s2 = Hirschberg.split(fstSeq,sndSeq,sim,indelCost)
+    (f1 |> notEmpty || s1 |> notEmpty) && (f2 |> notEmpty || s2 |> notEmpty)
 
 //[<Property>]
 //let ``Hirschberg - removing breaks gives input`` (fstSeq : Sequence, sndSeq : Sequence, indelCost : float) =
@@ -74,7 +73,7 @@ let ``Hirschberg - split doesn't return empty partition2``
 //    |> List.forall (fun (f,s) -> not (f = Break && s = Break))
 
 [<Fact>]
-let ``Needleman-Wunsch gives correct result`` () =
+let ``Needleman-Wunsch gives correct score`` () =
     let expected =
         [[   0;  -2;  -4;  -6;  -8; -10]
          [  -2;  -1;   0;  -2;  -4;  -6]
@@ -88,7 +87,7 @@ let ``Needleman-Wunsch gives correct result`` () =
     
     let sim (a,b) = if a = b  then 2. else -1.
 
-    Assert.Equal(expected, Hirschberg.NeedlemanWunsch([|A;G;T;A;C;G;C;A|],[|T;A;T;G;C|],sim,-2.))
+    Assert.Equal(expected, NeedlemanWunsch.runScore([|A;G;T;A;C;G;C;A|],[|T;A;T;G;C|],sim,-2.))
 
 let parse = function '-' -> Break | 'A' -> Nucl A | 'C' -> Nucl C | 'G' -> Nucl G | 'T' -> Nucl T | _ -> failwith "parse error" 
 
