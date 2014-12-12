@@ -1,5 +1,7 @@
 ﻿module SequenceAlignment.NeedlemanWunsch
 
+open System
+
 let runScore
     (fstSeq : Sequence, sndSeq: Sequence, sim : Similarity, indelCost : float) 
     : Alignment[,] =
@@ -35,6 +37,14 @@ let runScoreLastRow
 type Trace = NoTrace | Left | Diagonal | Up
 type ArrayCell = Alignment * Trace
 
+let printState(a) =
+    let formatT = function | NoTrace -> "." | Up -> "^" | Left -> "<" | Diagonal  -> "\\"
+    if Types.verbose then
+        Console.Clear()
+        logV "Needleman-Wunsch state:"
+        logV "%A" (a |> Array2D.map (fun (d,t) -> formatT t, d))
+        Threading.Thread.Sleep(300)
+
 let run
     (fstSeq : Sequence, sndSeq: Sequence, sim : Similarity, indelCost : float) 
     : Alignment * list<Nucleotide' * Nucleotide'> = 
@@ -48,6 +58,7 @@ let run
                             fst array.[i-1,j] + indelCost, Up
                             fst array.[i,j-1]+ indelCost, Left
                             ] |> List.maxBy fst
+            printState(array)
     
     let rec traceBack (i,j,acc) =
         let trace = snd array.[i,j]

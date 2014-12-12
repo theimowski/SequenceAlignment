@@ -9,4 +9,4 @@ type Similarity = Nucleotide * Nucleotide -> float
 type Alignment = float
 
 let mutable verbose = false
-let logV fmt = if verbose then Microsoft.FSharp.Core.Printf.kprintf (printfn "%s") fmt 
+let logV fmt = Microsoft.FSharp.Core.Printf.kprintf (fun s -> if verbose then printfn "%s" s) fmt 

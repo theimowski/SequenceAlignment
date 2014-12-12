@@ -14,6 +14,21 @@ let highest(arrays: list<ArrayCell<'a>[,]>, i, j) : ArrayCell<'a> =
 
 let inline addFst x (f,s) = f + x, s
 
+let private printState (a,b,c,s) =
+    let format = fst >> string >> (function | "-Infinity" -> "-i" | s -> s) >> sprintf "%5s"
+    if Types.verbose then
+        Console.Clear()
+        logV "Gotoh arrays state"
+        logV "A:"
+        logV "%A" (a |> Array2D.map format)
+        logV "B:"
+        logV "%A" (b |> Array2D.map format)
+        logV "C:"
+        logV "%A" (c  |> Array2D.map format)
+        logV "S:"
+        logV "%A" (s  |> Array2D.map format)
+        Threading.Thread.Sleep(300)
+
 let run 
     (fstSeq : Sequence, sndSeq : Sequence, sim : Similarity, p : BreakPenalty)
     : Alignment * list<Nucleotide' * Nucleotide'> =
@@ -33,9 +48,6 @@ let run
     let countC(i,j) : AlignmentCell =
         fst s.[i-1,j-1] + sim(fstSeq.[i-1], sndSeq.[j-1]), Some(Trail(c,i,j))
 
-    logV "initial state"
-    logV "%A" a
-
     s.[0,0] <- 0., None
     for i in 1..len1 do 
         b.[i,0] <- p(i), None
@@ -49,6 +61,7 @@ let run
             b.[i,j] <- countB(i,j)
             c.[i,j] <- countC(i,j)
             s.[i,j] <- highest([a;b;c],i,j)
+            printState(a,b,c,s)
 
     let rec unfoldTrail (acc,trail : option<Trail<Alignment>>) =
         match trail with

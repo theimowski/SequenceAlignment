@@ -24,19 +24,29 @@ let split
     let s1,s2 = sndSeq |> splitBefore jmid
     f1,f2,s1,s2
 
+let printState(f,s) = 
+    if verbose then
+        System.Console.Clear()
+        logV "%A" f
+        logV "%A" s
+        logV ""
+        System.Threading.Thread.Sleep(300)
+
 let run
     (f : Sequence, s: Sequence,sim : Similarity, indelCost : float)
     : Alignment * list<Nucleotide' * Nucleotide'> =
-    let rec run' (fstSeq,sndSeq,cont) = 
+    let rec run' (fstSeq : Sequence,sndSeq : Sequence,cont) = 
+
+        printState(fstSeq,sndSeq)
 
         match fstSeq,sndSeq with
-        | [|_|], _ | _, [|_|] -> cont(NeedlemanWunsch.run(fstSeq,sndSeq,sim,indelCost))
         | [||], _ -> 
             cont(indelCost * float sndSeq.Length, 
                  sndSeq |> Array.map (fun s -> Break, Nucl s) |> List.ofArray)
         | _, [||] -> 
             cont(indelCost * float fstSeq.Length, 
                  fstSeq |> Array.map (fun f -> Nucl f, Break) |> List.ofArray)
+        | [|_|], _ | _, [|_|] -> cont(NeedlemanWunsch.run(fstSeq,sndSeq,sim,indelCost))
         | _ -> 
             let f1,f2,s1,s2 = split(fstSeq,sndSeq,sim,indelCost)
             
