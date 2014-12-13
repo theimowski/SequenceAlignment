@@ -172,6 +172,12 @@ let ``Hirschberg gives correct result`` (in1, in2, indelCost, expectedSim, expec
     Program.formatSeq sndSeq |> shouldEqual expectedSnd
 
 
+let toMultiAlignment (x: string) = 
+    x.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
+    |> Array.map (fun s -> s.Trim())
+    |> Array.map (Seq.map parse)
+    |> array2D
+
 [<Theory>]
 [<InlineData(
     """
@@ -185,11 +191,7 @@ CG-GC
 let ``Consensus word gives correct result`` (input: string, expected) =
     let sim (a,b) = if a = b  then 2. else -1.
 
-    let malign = 
-        input.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
-        |> Array.map (fun s -> s.Trim())
-        |> Array.map (Seq.map parse)
-        |> array2D
+    let malign = input |> toMultiAlignment 
 
     let word = 
         MultiAlign.consensusWord(malign, sim)
