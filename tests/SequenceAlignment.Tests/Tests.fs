@@ -4,6 +4,7 @@ open Xunit
 open FsCheck
 open FsCheck.Xunit
 open Xunit.Extensions
+open System
 
 let p = fun (x:int) -> -1. - (1. * float x)
 let sim (x,y) = if x = y then 2. else 0.
@@ -130,7 +131,7 @@ let ``Needleman-Wunsch gives correct result`` (in1, in2, indelCost, expectedSim,
     Program.formatSeq fstSeq |> shouldEqual expectedFst
     Program.formatSeq sndSeq |> shouldEqual expectedSnd
 
-let parse = function '-' -> Break | 'A' -> Nucl A | 'C' -> Nucl C | 'G' -> Nucl G | 'T' -> Nucl T | _ -> failwith "parse error" 
+let parse = function '-' -> Break | 'A' -> Nucl A | 'C' -> Nucl C | 'G' -> Nucl G | 'T' -> Nucl T | x -> failwithf "parse error: %c" x 
 
 [<Theory>]
 [<InlineData(
@@ -159,7 +160,6 @@ let parse = function '-' -> Break | 'A' -> Nucl A | 'C' -> Nucl C | 'G' -> Nucl 
     1080.,
     "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
     "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")>]
-
 let ``Hirschberg gives correct result`` (in1, in2, indelCost, expectedSim, expectedFst, expectedSnd) =
             
     let sim (a,b) = if a = b  then 2. else -1.
@@ -172,3 +172,28 @@ let ``Hirschberg gives correct result`` (in1, in2, indelCost, expectedSim, expec
     Program.formatSeq sndSeq |> shouldEqual expectedSnd
 
 
+[<Theory>]
+[<InlineData(
+    """
+AGC-A
+AGAGA
+ACCG-
+CG-GC
+""",
+
+    "AGCGA")>]
+let ``Consensus word gives correct result`` (input: string, expected) =
+    let sim (a,b) = if a = b  then 2. else -1.
+
+    let malign = 
+        input.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
+        |> Array.map (fun s -> s.Trim())
+        |> Array.map (Seq.map parse)
+        |> array2D
+
+    let word = 
+        MultiAlign.consensusWord(malign, sim)
+        |> Array.map Program.formatNucl
+        |> String.concat ""
+
+    word |> shouldEqual expected

@@ -61,6 +61,7 @@
     <Compile Include="NeedlemanWunsch.fs" />
     <Compile Include="Gotoh.fs" />
     <Compile Include="Hirschberg.fs" />
+    <Compile Include="MultiAlign.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <None Include="input">
