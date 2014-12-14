@@ -80,3 +80,12 @@ let alignByProfiles
                         | None -> Array.create len2 Break))
     |> array2D
     |> Array2D.transpose
+
+let score (malign : MultiAlignment, sim : Similarity') : float = 
+    [0..Array2D.length2 malign - 1]
+    |> List.map (fun j -> malign.[*,j])
+    |> List.map (fun col -> 
+                     col |> Array.mapi (fun i n -> 
+                                            col.[i+1..col.Length-1]
+                                            |> Array.sumBy (fun n2 -> sim(n,n2) )))
+    |> List.sumBy Array.sum

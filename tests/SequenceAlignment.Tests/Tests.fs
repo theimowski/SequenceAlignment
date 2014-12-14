@@ -239,12 +239,12 @@ ATC
 """,
 
     """
-T-AG
-C-AT
-T--G
-TC--
-AG-G
-AT-C
+TAG-
+CAT-
+T-G-
+-TC-
+-AGG
+-ATC
 """)>]
 let ``Align by profiles gives correct result`` (input1: string, input2: string, expected : string) =
     let sim (a,b) = if a = b  then 2. else -1.
@@ -257,6 +257,5 @@ let ``Align by profiles gives correct result`` (input1: string, input2: string, 
         x.TrimEnd(chars).TrimStart(chars)
 
     let result = MultiAlign.alignByProfiles(malign1,malign2,sim)
-    let expected = expected |> trim
 
-    result |> formatMultiAlignment |> trim |> shouldEqual expected
+    result |> shouldEqual (expected |> toMultiAlignment)
