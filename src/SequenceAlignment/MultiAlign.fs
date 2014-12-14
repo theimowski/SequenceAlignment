@@ -34,3 +34,49 @@ let profile (malign : MultiAlignment) : MultiAlignmentProfile =
            |> Seq.countBy id
            |> Seq.map (fun (k, c) -> k, float c / float len1)
            |> Seq.fold (fun s (n,value) -> s |> Map.add n value) emptyMap)
+
+open NeedlemanWunsch
+
+module Array2D =
+    let transpose(a : _[,]) = 
+        [0..Array2D.length2 a - 1]
+        |> List.map (fun j -> a.[*,j])
+        |> array2D
+
+let alignByProfiles 
+    (malign1 : MultiAlignment, malign2 : MultiAlignment, sim : Similarity') 
+    : MultiAlignment = 
+    let p,q = profile malign1, profile malign2
+
+    let alphabet = [Nucl A;Nucl C;Nucl G;Nucl T]
+    let alphabet' = alphabet @ [Break]
+
+    let ops = {
+        LeftIndelCost = 
+            fun j -> alphabet |> List.sumBy (fun n -> sim(n,Break) * q.[j].[n])
+        UpIndelCost = 
+            fun i -> alphabet |> List.sumBy (fun n -> sim(n,Break) * p.[i].[n])
+        DiagonalCost = 
+            fun (i,j) -> 
+                alphabet' |> List.sumBy (fun n1 ->
+                    alphabet' |> List.sumBy (fun n2 -> sim(n1,n2) * p.[i].[n1] * q.[j].[n2]))
+    }
+
+    let _, list = 
+        NeedlemanWunsch.runGeneric([|0..Array2D.length2 malign1 - 1|],
+                             [|0..Array2D.length2 malign2 - 1|],
+                             ops)
+
+    let len1,len2 = Array2D.length1 malign1, Array2D.length1 malign2
+
+    list
+    |> List.map (fun (f,s) ->
+                    Array.append
+                        (match f with
+                        | Some f -> malign1.[*,f]
+                        | None -> Array.create len1 Break)
+                        (match s with
+                        | Some s -> malign2.[*,s]
+                        | None -> Array.create len2 Break))
+    |> array2D
+    |> Array2D.transpose

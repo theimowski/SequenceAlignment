@@ -199,3 +199,64 @@ let ``Consensus word gives correct result`` (input: string, expected) =
         |> String.concat ""
 
     word |> shouldEqual expected
+
+
+let formatMultiAlignment (a : MultiAlign.MultiAlignment) =
+    [0..Array2D.length1 a - 1]
+    |> List.map (fun i -> a.[i,*])
+    |> List.map (Array.map Program.formatNucl)
+    |> List.map (String.concat "")
+    |> String.concat Environment.NewLine
+
+[<Theory>]
+[<InlineData(
+    """
+TAG
+CAT
+""",
+    """
+TC-
+AGG
+""",
+
+    """
+TAG-
+CAT-
+-TC-
+-AGG
+""")>]
+
+[<InlineData(
+    """
+TAG
+CAT
+T-G
+""",
+    """
+TC-
+AGG
+ATC
+""",
+
+    """
+T-AG
+C-AT
+T--G
+TC--
+AG-G
+AT-C
+""")>]
+let ``Align by profiles gives correct result`` (input1: string, input2: string, expected : string) =
+    let sim (a,b) = if a = b  then 2. else -1.
+
+    let malign1 = input1 |> toMultiAlignment 
+    let malign2 = input2 |> toMultiAlignment 
+
+    let trim (x:string) = 
+        let chars = Environment.NewLine.ToCharArray()
+        x.TrimEnd(chars).TrimStart(chars)
+
+    let result = MultiAlign.alignByProfiles(malign1,malign2,sim)
+    let expected = expected |> trim
+
+    result |> formatMultiAlignment |> trim |> shouldEqual expected
