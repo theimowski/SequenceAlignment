@@ -259,3 +259,27 @@ let ``Align by profiles gives correct result`` (input1: string, input2: string, 
     let result = MultiAlign.alignByProfiles(malign1,malign2,sim)
 
     result |> shouldEqual (expected |> toMultiAlignment)
+
+
+[<Theory>]
+[<InlineData(
+    """
+TAG
+CAT
+TG
+""",
+
+    """
+TAG
+CAT
+T-G
+""")>]
+let ``Progressive multi alginment gives correct result`` (input: string,  expected : string) =
+    let sim (a,b) = if a = b  then 1. else 0.
+
+    let seqs =
+        input.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
+        |> Array.map Program.parseLine
+
+    let result = MultiAlign.UPGMA(seqs, sim)
+    result |> shouldEqual (expected |> toMultiAlignment)
