@@ -95,6 +95,16 @@ let main argv =
     | "UPGMA" :: _ ->
         MultiAlign.UPGMA(readSequences(), sim) |> printfn "%A"
 
-    | _ -> printfn "usage: SequenceAlignment.exe [Gotoh|NeedlemanWunsch|Hirschberg|profile|cons|malign|UPGMA] [-v|--verbose]"
+    | _ -> printfn "usage: SequenceAlignment.exe <command> [-v|--verbose]"
+           printfn """
+    available commands:
+    - Gotoh 
+    - NeedlemanWunsch 
+    - Hirschberg 
+    - profile 
+    - cons 
+    - malign 
+    - UPGMA
+"""
 
     0
