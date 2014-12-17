@@ -1,74 +1,68 @@
-*Tomasz Heimowski, 131517*
-
-*Filip Kucharczyk, 131548*
-
-*Mateusz Szymański, 131633*
 
 ***
 
-Dokumentacja
-============
+Sequence Alignment
+==================
 
-Wstęp
+Intro
 -----
-Aplikacja *SequenceAlignment* zawiera rozwiązanie dwóch zadań projektowych z przedmiotu *Elementy Bioinformatyki*:
+*SequenceAlignment* app contains solutions for two exercises from lessons of *Computional Biology*:
 
-1. Zestawienie optymalne 2 sekwencji
-	* algorytm z funkcją kary 
-	* algorytm bez funkcji kary, ze złożonością czasową O(n)
-2. Zestawienia wielu sekwencji
-	* słowo konsensusowe, profil wielodopasowania
-	* złożenie 2 wielodopasowań
-	* progressive multi alignment wielu sekwencji
+1. Optimal aligment of 2 sequences 
+	* with penalty function 
+	* without penalty function; but with linear memory complexity
+2. Aligment of multiple sequences
+	* consensus word, multialignment profile
+	* alignment of 2 multialignments
+	* progressive multi alignment of multiple sequences
 
-Aplikacja została napisana w języku F#. Jej kod źródłowy został udostępniony na witrynie *GitHub*, 
-pod adresem [https://github.com/theimowski/SequenceAlignment](https://github.com/theimowski/SequenceAlignment)
+Application has been written in F#. Source code can be found on *GitHub*: [https://github.com/theimowski/SequenceAlignment](https://github.com/theimowski/SequenceAlignment)
 
-Obsługa aplikacji
------------------
-Aplikacja jest typu konsolowego, obsługa wywołania z lini poleceń jest następująca:
+Application manual
+------------------
+This is a console app, to invoke it from command line:
 
 	SequenceAlignment.exe <command> [-v|--verbose]
 
-Dostępne komendy: 
+Available commands: 
 
 * Gotoh
 
-	Uruchamia algorytm zestawienia 2 sekwencji z funkcją kary ``f(x) = -x -1``, znany pod nazwą *Gotoh*.
+	Run algorithm for aligning 2 sequences with penalty function ``f(x) = -x -1``, known as *Gotoh*.
 
 * NeedlemanWunsch
 
-	Uruchamia algorytm Needleman-Wunsch zestawienia 2 sekwencji bez funkcji kary.
+	Run Needleman-Wunsch algorithm for aligning 2 sequences without penalty function.
 
 * Hirschberg
 
-	Uruchamia algorytm Hirschberg zestawienia 2 sekwencji bez funkcji kary.
+	Run Hirschberg algorithm for aligning 2 sequences without penalty function.
 
 * profile
 
-	Wylicza profil wielodopasowania.
+	Count profile of a multialignment.
 
 * cons 
 
-	Wylicza słowo konsensusowe wielodopasowania.
+	Count consensus word for a multialignment.
 
 * malign 
 
-	Składa dwa wielodopasowania w jedno.
+	Align two multialignments into one.
 
 * UPGMA
 
-	Uruchamia algorytm progressive multialignment dla wielu sekwencji.
-	Funkcja wybierająca dwa klastry do złączenia to Unweighted Pair Grouping Method with Arithmetic Mean.
+	Run progressive multi align algorithm for multiple sequences.
+	Unweighted Pair Grouping Method with Arithmetic Mean has been used for choosing two clusters to align in each step of the algorithm.
 
-Flagi:
+Flags:
 
 * [*-v|--verbose*]
 	
-	Wypisuje kolejne kroki algotymu na standardowe wyjście
+	Writes steps of current algorithm to the standard output.
 
-Format danych
--------------
+Input data format
+-----------------
 
-Opis algorytmów
----------------
+Description of the algorithms
+-----------------------------
