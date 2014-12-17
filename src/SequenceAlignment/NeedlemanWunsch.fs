@@ -62,6 +62,7 @@ let runGeneric
                             fst array.[i-1,j] + ops.UpIndelCost(i-1), Up
                             fst array.[i,j-1]+ ops.LeftIndelCost(j-1), Left
                             ] |> List.maxBy fst
+            printState(array)
 
     let rec traceBack (i,j,acc) =
         let trace = snd array.[i,j]

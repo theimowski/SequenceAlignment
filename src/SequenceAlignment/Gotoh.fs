@@ -6,6 +6,8 @@ type Trace<'a> = Trace of ArrayCell<'a>[,] * int * int
 and ArrayCell<'a> = 'a * option<Trace<'a>>
 type AlignmentCell = ArrayCell<Alignment>
 
+let p x = -1. - (1. * float x)
+
 let highest(arrays: list<ArrayCell<'a>[,]>, i, j) : ArrayCell<'a> =
     arrays
     |> List.map (fun a -> fst a.[i,j], a)
@@ -30,7 +32,7 @@ let private printState (a,b,c,s) =
         Threading.Thread.Sleep(300)
 
 let run 
-    (fstSeq : Sequence, sndSeq : Sequence, sim : Similarity, p : BreakPenalty)
+    (fstSeq : Sequence, sndSeq : Sequence, sim : Similarity')
     : Alignment * list<Nucleotide' * Nucleotide'> =
         
     let len1, len2 = fstSeq.Length, sndSeq.Length
@@ -46,7 +48,7 @@ let run
         |> List.map (fun k -> highest([a;c], k, j) |> addFst (p(i-k)))
         |> List.maxBy fst
     let countC(i,j) : AlignmentCell =
-        fst s.[i-1,j-1] + sim(fstSeq.[i-1], sndSeq.[j-1]), Some(Trace(c,i,j))
+        fst s.[i-1,j-1] + sim(Nucl fstSeq.[i-1], Nucl sndSeq.[j-1]), Some(Trace(c,i,j))
 
     s.[0,0] <- 0., None
     for i in 1..len1 do 

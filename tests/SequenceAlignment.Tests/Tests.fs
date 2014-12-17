@@ -6,8 +6,6 @@ open FsCheck.Xunit
 open Xunit.Extensions
 open System
 
-let p = fun (x:int) -> -1. - (1. * float x)
-
 let sim' (x,y) = 
         match x,y with
         | Break,_ | _,Break -> -2.
@@ -19,30 +17,30 @@ let shouldEqual (x : 'a) (y : 'a) = Assert.Equal<'a>(x, y)
 
 [<Property>]
 let ``Gotoh - removing breaks gives input`` (fstSeq : Sequence, sndSeq : Sequence) =
-    let _,sequence =  Gotoh.run(fstSeq,sndSeq, sim, p)
+    let _,sequence =  Gotoh.run(fstSeq,sndSeq, sim)
     let f,s = sequence |> List.unzip
     f |> List.filter ((<>) Break) = (fstSeq |> Array.toList |> List.map Nucl) &&
     s |> List.filter ((<>) Break) = (sndSeq |> Array.toList |> List.map Nucl)
 
 [<Property>]
 let ``Gotoh - alignment is correct`` (fstSeq : Sequence, sndSeq : Sequence) =
-    let alignment,sequence =  Gotoh.run(fstSeq,sndSeq, sim, p)
+    let alignment,sequence =  Gotoh.run(fstSeq,sndSeq, sim)
     let rec count (sequence,breakLength,sum) =
         match sequence with 
         | [] -> 
-            let penalty = if breakLength > 0 then p(breakLength) else 0.
+            let penalty = if breakLength > 0 then Gotoh.p(breakLength) else 0.
             sum + penalty
         | (Break,_) :: t | (_,Break) :: t ->
             count(t,breakLength+1,sum)
         | (f,s) :: t ->
-            let penalty = if breakLength > 0 then p(breakLength) else 0.
+            let penalty = if breakLength > 0 then Gotoh.p(breakLength) else 0.
             count(t,0,sum + penalty + sim(f,s))
 
     count(sequence,0,0.) = alignment
 
 [<Property>]
 let ``Gotoh - no double breaks in sequence`` (fstSeq : Sequence, sndSeq : Sequence) =
-    let _,sequence =  Gotoh.run(fstSeq,sndSeq, sim, p)
+    let _,sequence =  Gotoh.run(fstSeq,sndSeq, sim)
     sequence
     |> List.forall (fun (f,s) -> not (f = Break && s = Break))
 
@@ -145,7 +143,11 @@ let ``Needleman-Wunsch gives correct result`` (in1, in2, indelCost, expectedSim,
     Program.formatSeq fstSeq |> shouldEqual expectedFst
     Program.formatSeq sndSeq |> shouldEqual expectedSnd
 
-let parse = function '-' -> Break | 'A' -> Nucl A | 'C' -> Nucl C | 'G' -> Nucl G | 'T' -> Nucl T | x -> failwithf "parse error: %c" x 
+let toMultiAlignment (x: string) = 
+    x.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
+    |> Array.map (fun s -> s.Trim())
+    |> Array.map (Seq.map Program.parse')
+    |> array2D
 
 [<Theory>]
 [<InlineData(
@@ -190,11 +192,7 @@ let ``Hirschberg gives correct result`` (in1, in2, indelCost, expectedSim, expec
     Program.formatSeq sndSeq |> shouldEqual expectedSnd
 
 
-let toMultiAlignment (x: string) = 
-    x.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
-    |> Array.map (fun s -> s.Trim())
-    |> Array.map (Seq.map parse)
-    |> array2D
+
 
 [<Theory>]
 [<InlineData(
