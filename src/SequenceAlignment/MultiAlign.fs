@@ -1,9 +1,6 @@
 ﻿module SequenceAlignment.MultiAlign
 
-type MultiAlignment = Nucleotide'[,]
-type ConsensusWord = Nucleotide'[]
-type Similarity' = Nucleotide' * Nucleotide' -> float
-type MultiAlignmentProfile = Map<Nucleotide',float>[]
+open NeedlemanWunsch
 
 let consensusWord (malign : MultiAlignment, sim : Similarity') : ConsensusWord = 
     [| 0..Array2D.length2 malign - 1 |]
@@ -34,8 +31,6 @@ let profile (malign : MultiAlignment) : MultiAlignmentProfile =
            |> Seq.countBy id
            |> Seq.map (fun (k, c) -> k, float c / float len1)
            |> Seq.fold (fun s (n,value) -> s |> Map.add n value) emptyMap)
-
-open NeedlemanWunsch
 
 module Array2D =
     let transpose(a : _[,]) = 

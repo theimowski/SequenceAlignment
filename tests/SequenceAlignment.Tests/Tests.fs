@@ -201,7 +201,7 @@ let ``Consensus word gives correct result`` (input: string, expected) =
     word |> shouldEqual expected
 
 
-let formatMultiAlignment (a : MultiAlign.MultiAlignment) =
+let formatMultiAlignment (a : MultiAlignment) =
     [0..Array2D.length1 a - 1]
     |> List.map (fun i -> a.[i,*])
     |> List.map (Array.map Program.formatNucl)
@@ -294,7 +294,7 @@ ACTT-GACCGTTTCCTT
 AGAT-GACCGTTTCGAT
 AC-TACACCCTTATGAG
 """)>]
-let ``Progressive multi alginment gives correct result`` (input: string,  expected : string) =
+let ``Progressive multi alignment gives correct result`` (input: string,  expected : string) =
     let sim (a,b) = if a = b  then 1. else 0.
 
     let seqs =
