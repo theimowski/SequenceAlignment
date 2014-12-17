@@ -88,12 +88,9 @@ let score (malign : MultiAlignment, sim : Similarity') : float =
 
 let UPGMA(seqs : Sequence[], sim' : Similarity') : MultiAlignment = 
     
-    let sim(x,y) = sim'(Nucl x, Nucl y)
-    //////////// !!!!!!!!!!
-    let magicValueDoSthWithIT = 0.
     let distances = 
         Array2D.init seqs.Length seqs.Length (fun i j -> 
-            if j < i then Hirschberg.run (seqs.[i], seqs.[j], sim, magicValueDoSthWithIT) |> fst
+            if j < i then Hirschberg.run (seqs.[i], seqs.[j], sim') |> fst
             else System.Double.NegativeInfinity)
 
     let maxSim = distances |> Seq.cast |> Seq.max

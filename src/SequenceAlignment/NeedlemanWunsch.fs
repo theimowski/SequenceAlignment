@@ -3,32 +3,31 @@
 open System
 
 let runScore
-    (fstSeq : Sequence, sndSeq: Sequence, sim : Similarity, indelCost : float) 
-    : Alignment[,] =
+    (fstSeq : Sequence, sndSeq: Sequence, sim' : Similarity') : Alignment[,] =
     let len1,len2 = fstSeq.Length, sndSeq.Length
     let array = Array2D.zeroCreate (len1+1) (len2+1)
-    [1..len1] |> List.iter (fun i -> array.[i,0] <- float i * indelCost)
-    [1..len2] |> List.iter (fun j -> array.[0,j] <- float j * indelCost)
+    [1..len1] |> List.iter (fun i -> array.[i,0] <- array.[i-1,0] + sim'(Nucl fstSeq.[i-1], Break))
+    [1..len2] |> List.iter (fun j -> array.[0,j] <- array.[0,j-1] + sim'(Break, Nucl sndSeq.[j-1]))
     for i in 1..len1 do
         for j in 1..len2 do
-            array.[i,j] <- [array.[i-1,j-1] + sim(fstSeq.[i-1],sndSeq.[j-1])
-                            array.[i-1,j]+indelCost
-                            array.[i,j-1]+indelCost
+            array.[i,j] <- [array.[i-1,j-1] + sim'(Nucl fstSeq.[i-1],Nucl sndSeq.[j-1])
+                            array.[i-1,j] + sim'(Nucl fstSeq.[i-1], Break)
+                            array.[i,j-1] + sim'(Break, Nucl sndSeq.[j-1])
                             ] |> List.max
     array
 
 let runScoreLastRow
-    (fstSeq : Sequence, sndSeq: Sequence, sim : Similarity, indelCost : float) 
-    : Alignment[] =
+    (fstSeq : Sequence, sndSeq: Sequence, sim' : Similarity') : Alignment[] =
     let len1,len2 = fstSeq.Length, sndSeq.Length
-    let prev_row = Array.init (len2+1) (fun j -> float j * indelCost)
+    let prev_row = Array.zeroCreate (len2+1)
+    [1..len2] |> List.iter (fun j -> prev_row.[j] <- prev_row.[j-1] + sim'(Break, Nucl sndSeq.[j-1]))
     let cur_row = Array.copy prev_row
     for i in 1..len1 do 
-        cur_row.[0] <- float i * indelCost
+        cur_row.[0] <- prev_row.[0] + sim'(Nucl fstSeq.[i-1], Break)
         for j in 1..len2 do
-            cur_row.[j] <- [prev_row.[j-1] + sim(fstSeq.[i-1],sndSeq.[j-1])
-                            prev_row.[j] + indelCost
-                            cur_row.[j-1]+indelCost
+            cur_row.[j] <- [prev_row.[j-1] + sim'(Nucl fstSeq.[i-1],Nucl sndSeq.[j-1])
+                            prev_row.[j] + sim'(Nucl fstSeq.[i-1], Break)
+                            cur_row.[j-1]+ sim'(Break, Nucl sndSeq.[j-1])
                             ] |> List.max
         Array.blit cur_row 0 prev_row 0 (len2+1)
             
@@ -75,13 +74,13 @@ let runGeneric
     fst array.[len1,len2], traceBack(len1, len2, [])
 
 let run
-    (fstSeq : Sequence, sndSeq: Sequence, sim : Similarity, indelCost : float) 
+    (fstSeq : Sequence, sndSeq: Sequence, sim' : Similarity') 
     : Alignment * list<Nucleotide' * Nucleotide'> = 
 
     let ops = {
-        LeftIndelCost = fun _ -> indelCost
-        UpIndelCost = fun _ -> indelCost
-        DiagonalCost = fun (i,j) -> sim(fstSeq.[i],sndSeq.[j])
+        LeftIndelCost = fun j -> sim'(Break, Nucl sndSeq.[j])
+        UpIndelCost = fun i -> sim'(Nucl fstSeq.[i], Break)
+        DiagonalCost = fun (i,j) -> sim'(Nucl fstSeq.[i],Nucl sndSeq.[j])
     }
 
     let translate = function

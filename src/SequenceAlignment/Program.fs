@@ -41,11 +41,20 @@ let readSimilarity() : Similarity =
         let index = match s' with A -> 0 | C -> 1 | G -> 2 | T -> 3
         lookup.[f'].[index])
 
+let readSimilarity'() : Similarity' =
+    let parseLine (s:string) = s.Split([|';'|]) |> Array.map float
+    let lookup = 
+        [Nucl A;Nucl C;Nucl G;Nucl T;Break] 
+        |> List.map (fun n -> n, Console.ReadLine() |> parseLine)
+        |> Map.ofList
+    (fun (f,s) ->
+        let f',s' = max f s, min f s
+        let index = match s' with Nucl A -> 0 | Nucl C -> 1 | Nucl G -> 2 | Nucl T -> 3 | Break -> 4
+        lookup.[f'].[index])
 
 [<EntryPoint>]
 let main argv = 
     let penaltyBreak x = -1. - (1. * float x)
-    let indelCost = -2.
 
 #if DEBUG
     use _in = new IO.StreamReader("input")
@@ -60,9 +69,9 @@ let main argv =
     | "Gotoh" :: _ -> 
         Gotoh.run(readSequence(), readSequence(), readSimilarity(), penaltyBreak) |> formatOutput
     | "NeedlemanWunsch" :: _ ->
-        NeedlemanWunsch.run(readSequence() ,readSequence(), readSimilarity(), indelCost) |> formatOutput
+        NeedlemanWunsch.run(readSequence() ,readSequence(), readSimilarity'()) |> formatOutput
     | "Hirschberg" :: _ ->
-        Hirschberg.run(readSequence(), readSequence(), readSimilarity(), indelCost) |> formatOutput
+        Hirschberg.run(readSequence(), readSequence(), readSimilarity'()) |> formatOutput
     | _ -> printfn "usage: SequenceAlignment.exe [Gotoh|NeedlemanWunsch|Hirschberg] [-v|--verbose]"
 
     0

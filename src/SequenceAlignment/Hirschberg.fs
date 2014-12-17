@@ -7,12 +7,12 @@ let inline splitBefore i (x: _[]) =
     | _ -> x.[0..i-1], x.[i..(x.Length-1)]
 
 let split 
-    (fstSeq : Sequence, sndSeq: Sequence,sim : Similarity, indelCost : float) =
+    (fstSeq : Sequence, sndSeq: Sequence,sim' : Similarity') =
     let imid = fstSeq.Length / 2
     let f1,f2 = fstSeq |> splitBefore imid
 
-    let upper = NeedlemanWunsch.runScoreLastRow(f1,sndSeq,sim,indelCost) 
-    let lower = NeedlemanWunsch.runScoreLastRow(Array.rev f2, Array.rev sndSeq, sim, indelCost)
+    let upper = NeedlemanWunsch.runScoreLastRow(f1,sndSeq,sim') 
+    let lower = NeedlemanWunsch.runScoreLastRow(Array.rev f2, Array.rev sndSeq, sim')
 
     let jmid = 
         (upper,lower |> Array.rev) 
@@ -33,7 +33,7 @@ let printState(f,s) =
         System.Threading.Thread.Sleep(300)
 
 let run
-    (f : Sequence, s: Sequence,sim : Similarity, indelCost : float)
+    (f : Sequence, s: Sequence,sim' : Similarity')
     : Alignment * list<Nucleotide' * Nucleotide'> =
     let rec run' (fstSeq : Sequence,sndSeq : Sequence,cont) = 
 
@@ -41,14 +41,14 @@ let run
 
         match fstSeq,sndSeq with
         | [||], _ -> 
-            cont(indelCost * float sndSeq.Length, 
-                 sndSeq |> Array.map (fun s -> Break, Nucl s) |> List.ofArray)
+            let al = sndSeq |> Array.map (fun s -> Break, Nucl s)
+            cont(al |> Array.sumBy sim', List.ofArray al)
         | _, [||] -> 
-            cont(indelCost * float fstSeq.Length, 
-                 fstSeq |> Array.map (fun f -> Nucl f, Break) |> List.ofArray)
-        | [|_|], _ | _, [|_|] -> cont(NeedlemanWunsch.run(fstSeq,sndSeq,sim,indelCost))
+            let al = fstSeq |> Array.map (fun f -> Nucl f, Break)
+            cont(al |> Array.sumBy sim', List.ofArray al)
+        | [|_|], _ | _, [|_|] -> cont(NeedlemanWunsch.run(fstSeq,sndSeq,sim'))
         | _ -> 
-            let f1,f2,s1,s2 = split(fstSeq,sndSeq,sim,indelCost)
+            let f1,f2,s1,s2 = split(fstSeq,sndSeq,sim')
             
             run' (f1,s1,(fun (lA,lL) ->
                 run' (f2,s2,(fun (rA,rL) ->
