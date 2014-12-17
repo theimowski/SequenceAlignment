@@ -91,29 +91,20 @@ let score (malign : MultiAlignment, sim : Similarity') : float =
     |> List.sumBy Array.sum
 
 
-/// http://stackoverflow.com/a/19406376/1397724
-let concat (a1: 'a[,]) (a2: 'a[,]) =
-    let a1l1,a1l2,a2l1,a2l2 = (Array2D.length1 a1),(Array2D.length2 a1),(Array2D.length1 a2),(Array2D.length2 a2)
-    if a1l2 <> a2l2 then failwith "arrays have different column sizes"
-    let result = Array2D.zeroCreate (a1l1 + a2l1) a1l2
-    Array2D.blit a1 0 0 result 0 0 a1l1 a1l2
-    Array2D.blit a2 0 0 result a1l1 0 a2l1 a2l2
-    result
-
 let UPGMA(seqs : Sequence[], sim' : Similarity') : MultiAlignment = 
     
     let sim(x,y) = sim'(Nucl x, Nucl y)
     //////////// !!!!!!!!!!
-    let magicValueDoSthWithIT = -2.
+    let magicValueDoSthWithIT = 0.
     let distances = 
         Array2D.init seqs.Length seqs.Length (fun i j -> 
             if j < i then Hirschberg.run (seqs.[i], seqs.[j], sim, magicValueDoSthWithIT) |> fst
-            else System.Double.PositiveInfinity)
+            else System.Double.NegativeInfinity)
 
     let maxSim = distances |> Seq.cast |> Seq.max
 
     distances |> Array2D.iteri (fun i j value -> 
-                     if j < i then distances.[i, j] <- maxSim - value)
+                      distances.[i, j] <- if j < i then maxSim - value else System.Double.PositiveInfinity)
 
     let rec clusterize (maligns,distances) =
         match maligns with
@@ -123,30 +114,28 @@ let UPGMA(seqs : Sequence[], sim' : Similarity') : MultiAlignment =
             let i, j = 
                 distances 
                 |> Array2D.mapi (fun i j v-> (i,j),v) 
-                |> Seq.cast 
-                |> Seq.maxBy snd 
+                |> Seq.cast<(int*int)*float>
+                |> Seq.minBy snd 
                 |> fst
 
-            let malign = alignByProfiles(maligns.[i], maligns.[j],sim')
+            let malign = alignByProfiles(maligns.[j], maligns.[i],sim')
             let maligns' = 
-                Array.concat [maligns.[..i-1];[|malign|];maligns.[i..j-1];maligns.[j..]]
+                Array.concat [maligns.[0..j-1];[|malign|];maligns.[j+1..i-1];maligns.[i+1..]]
             let lenI, lenJ = Array2D.length1 maligns.[i] |> float,Array2D.length1 maligns.[j] |> float
+            let dist (i,j) = let i,j = max i j, min i j in distances.[i,j]
             let distances' =
                 seq { 
                     for row in 0..maligns.Length - 1 do
-                        yield seq {
+                        if row <> i then yield seq {
                             for col in 0..maligns.Length - 1 do
-                                match row,col with
-                                | row,col when row <= col -> yield System.Double.PositiveInfinity
-                                | _, col when col = j -> ()
-                                | row,_ when row = j -> ()
-                                | row,_ when row = i ->
-                                    yield (distances.[i,col] * lenI + distances.[j,col] * lenJ) /
-                                            (lenI + lenJ)
-                                | _,col when col = i ->
-                                    yield (distances.[row,i] * lenI + distances.[row,j] * lenJ) /
-                                            (lenI + lenJ)
-                                | _ -> yield distances.[row,col]
+                                if col <> i then 
+                                    match row,col with
+                                    | row,col when row <= col -> yield System.Double.PositiveInfinity
+                                    | row,_ when row = j ->
+                                        yield (dist(i,col) * lenI + dist(j,col) * lenJ) / (lenI + lenJ)
+                                    | _,col when col = j ->
+                                        yield (dist(i,row) * lenI + dist(j,row) * lenJ) / (lenI + lenJ)
+                                    | _ -> yield distances.[row,col]
                         }
                 } |> array2D
             
@@ -154,10 +143,3 @@ let UPGMA(seqs : Sequence[], sim' : Similarity') : MultiAlignment =
 
     let initialMaligns = seqs |> Array.map (fun s  -> [|s |> Array.map Nucl|] |> array2D)
     clusterize (initialMaligns, distances)
-
-let seqs = [|
-    [|G;C;T;T|]
-    [|A;C;T;T|]
-|]
-let sim (x,y) = if x = y then 1. else 0.
-UPGMA(seqs,sim)

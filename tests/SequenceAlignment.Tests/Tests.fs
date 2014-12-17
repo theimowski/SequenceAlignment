@@ -252,13 +252,15 @@ let ``Align by profiles gives correct result`` (input1: string, input2: string, 
     let malign1 = input1 |> toMultiAlignment 
     let malign2 = input2 |> toMultiAlignment 
 
-    let trim (x:string) = 
-        let chars = Environment.NewLine.ToCharArray()
-        x.TrimEnd(chars).TrimStart(chars)
-
+    
     let result = MultiAlign.alignByProfiles(malign1,malign2,sim)
 
     result |> shouldEqual (expected |> toMultiAlignment)
+
+
+let trim (x:string) = 
+        let chars = Environment.NewLine.ToCharArray()
+        x.TrimEnd(chars).TrimStart(chars)
 
 
 [<Theory>]
@@ -266,13 +268,31 @@ let ``Align by profiles gives correct result`` (input1: string, input2: string, 
     """
 TAG
 CAT
-TG
+TGT
 """,
 
     """
-TAG
-CAT
-T-G
+TAG-
+T-GT
+CA-T
+""")>]
+[<InlineData(
+    """
+GCTTGTCCGTTACGAT
+ACTTGTCTGTTACGAT
+ACTTGTCCGAAACGAT
+ACTTGACCGTTTCCTT
+AGATGACCGTTTCGAT
+ACTACACCCTTATGAG
+""",
+
+    """
+GCTT-GTCCGTTACGAT
+ACTT-GTCTGTTACGAT
+ACTT-GTCCGAAACGAT
+ACTT-GACCGTTTCCTT
+AGAT-GACCGTTTCGAT
+AC-TACACCCTTATGAG
 """)>]
 let ``Progressive multi alginment gives correct result`` (input: string,  expected : string) =
     let sim (a,b) = if a = b  then 1. else 0.
@@ -281,5 +301,7 @@ let ``Progressive multi alginment gives correct result`` (input: string,  expect
         input.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
         |> Array.map Program.parseLine
 
-    let result = MultiAlign.UPGMA(seqs, sim)
-    result |> shouldEqual (expected |> toMultiAlignment)
+    let result = MultiAlign.UPGMA(seqs, sim) |> formatMultiAlignment
+    result |> trim |> shouldEqual (expected |> trim)
+    
+    MultiAlign.score(input |> toMultiAlignment, sim) <= MultiAlign.score(expected |> toMultiAlignment, sim) |> shouldEqual true
