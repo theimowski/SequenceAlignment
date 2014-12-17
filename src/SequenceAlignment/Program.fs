@@ -70,7 +70,7 @@ let readMultiAlignment() : MultiAlignment =
 let main argv = 
 
 #if DEBUG
-    use _in = new IO.StreamReader("in_m")
+    use _in = new IO.StreamReader("input")
     Console.SetIn(_in)
 #endif
     
@@ -79,6 +79,7 @@ let main argv =
         argv |> Array.exists ((=) "--verbose")
 
     let sim = readSimilarity()
+    Console.ReadLine() |> ignore
     match argv |> Array.toList with
     | "Gotoh" :: _ -> 
         Gotoh.run(readSequence(), readSequence(), sim) |> formatOutput
