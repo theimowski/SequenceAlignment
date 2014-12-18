@@ -84,7 +84,7 @@ The similarity matrix is parsed to the following :
 | T | 0 | 0 | 0 | 1 | 0 |
 | - | 0 | 0 | 0 | 0 | 1 |
 
-For *Gotoh*, there's no need to lookup similarity of ``-`` (a break) with other Nucleotide, because the algorithm uses the penalty function. Therefore for *Gotoh* command the **last line of the matrix is ignored**.
+For *Gotoh*, there's no need to lookup similarity of ``-`` (a space) with other Nucleotide, because the algorithm uses the penalty function. Therefore for *Gotoh* command the **last line of the matrix is ignored**.
 
 Likewise, for *profile* command, the similarity matrix is **completely ignored**.
 
@@ -148,5 +148,68 @@ Standard output:
 	ACTGATTAA
 	A-----TAA
 
-Description of the algorithms
------------------------------
+Implementation details
+----------------------
+
+* Gotoh
+
+	The algorithm is based on Dynamic Programming. It has been implemented with the help of 4 matrices:
+
+	* Matrix A assumes that the last element from first sequence is aligned with a space.
+	* Matrix B assumes that the last element from second sequence is aligned with a space.
+	* Matrix C assumes that the last element from first and second sequence are aligned together.
+	* Matrix S contains best alignments from matrices A;B;C
+
+	Each matrix cell (i,j) contains a pair of elements:
+
+	* optimal alignment score of aligning subwords u[0..i], w[0..j],
+	* trace with reference to previous matrix and indices.
+
+	Break penalty function used in the algorithm is ``f(x) = -x -1``.
+
+	Traceback collects the suballigments into the final optimal solution.
+
+* NeedlemanWunsch
+
+	The algorithm operates on a single matrix, where cell with indices (i,j) contains:
+
+	* optimal solution for subwords u[0..i], w[0..j],
+	* trace: Up, Left or Diagonal
+
+	As in Gotoh, a traceback function builds the optimal solution.
+
+	In ``NeedlemanWunsch`` module, there are also helper functions:
+
+	* ``runScoreLastRow`` which is used by Hirschberg algorithm to get the last row of matrix, without the trace,
+	* ``runGeneric`` which is used by malign algorithm to align 2 sequences of indices based on multialginment profiles.
+
+* Hirschberg
+
+	Hirschberg algorithm is based on Divide-and-Conquer technique. 
+	Optimal alignment of 2 sequences is a concatenation of optimal alignments of specific pairs of subsequences.
+	Based on that property, the algorithm splits the 2 sequences into smaller ones, solves the problem for those and concatenates the results.
+
+	To split the sequences, ``runScoreLastRow`` function is used from ``NeedlemanWunsch`` module.
+	The function is implemented recursivelly, using continuations technique to ensure tail recursive calls and prevent stack overflow.
+
+* profile
+
+	For given multialignment, the ``profile`` function computes a probability matrix [i,j] of occuring a specific Nucletoide i in column j.
+
+* cons 
+
+	For given multialignment, the ``consensusWord`` function computes a word that is most similar to the multialignment.
+
+* malign 
+
+	``alignByProfiles`` function aligns two given multialignments into one, 
+	based on their profiles and the ``runGeneric`` function of ``NeedlemanWunsch`` module.
+
+* UPGMA
+
+	UPGMA algorithm starts with creating seperate cluster for each of the sequence from the input. 
+	For each pair of the sequences, it calculates the similarity matrix using ``Hirschberg`` module.
+	Then, the similarity is converted linearly to distance, so that two most similar sequences have the smallest distance.
+
+	In each step, the UPGMA algorithm chooses two closest clusters and joins them (using ``alignByProfiles``), and recreates the distance matrix.
+	The algorithm stops when there's only one cluster left.
