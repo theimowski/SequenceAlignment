@@ -51,16 +51,7 @@ let readMultiAlignment() : MultiAlignment =
 
 
 
-let formatNucl = function
-| Break -> "-"
-| Nucl x -> 
-    match x with
-    | A -> "A"
-    | C -> "C"
-    | G -> "G"
-    | T -> "T"
 
-let formatSeq (x: seq<Nucleotide'>) = x |> Seq.map formatNucl |> String.concat ""
 
 let formatOutput (alignment, sequence) = 
     let f,s = sequence |> List.unzip
@@ -68,11 +59,7 @@ let formatOutput (alignment, sequence) =
     s |> formatSeq |> printfn "%s"
     printfn "similarity: %f" alignment
 
-let formatMAlign (malign: MultiAlignment) = 
-    [0..Array2D.length1 malign - 1]
-    |> List.map (fun i -> malign.[i,*] |> formatSeq)
-    |> String.concat Environment.NewLine
-    |> printfn "%s"
+
 
 let formatProfile (profile : MultiAlignmentProfile) = 
     profile
@@ -85,7 +72,7 @@ let formatProfile (profile : MultiAlignmentProfile) =
 let main argv = 
 
 //#if DEBUG
-    use _in = new IO.StreamReader("in_pr")
+    use _in = new IO.StreamReader("in_2")
     Console.SetIn(_in)
 //#endif
     

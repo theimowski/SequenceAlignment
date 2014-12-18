@@ -140,8 +140,8 @@ let ``Needleman-Wunsch gives correct result`` (in1, in2, indelCost, expectedSim,
     let fstSeq,sndSeq = seq |> List.unzip
 
     Assert.Equal(expectedSim, a)
-    Program.formatSeq fstSeq |> shouldEqual expectedFst
-    Program.formatSeq sndSeq |> shouldEqual expectedSnd
+    formatSeq fstSeq |> shouldEqual expectedFst
+    formatSeq sndSeq |> shouldEqual expectedSnd
 
 let toMultiAlignment (x: string) = 
     x.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
@@ -188,8 +188,8 @@ let ``Hirschberg gives correct result`` (in1, in2, indelCost, expectedSim, expec
     let fstSeq,sndSeq = seq |> List.unzip
 
     Assert.Equal(expectedSim, a)
-    Program.formatSeq fstSeq |> shouldEqual expectedFst
-    Program.formatSeq sndSeq |> shouldEqual expectedSnd
+    formatSeq fstSeq |> shouldEqual expectedFst
+    formatSeq sndSeq |> shouldEqual expectedSnd
 
 
 
@@ -211,7 +211,7 @@ let ``Consensus word gives correct result`` (input: string, expected) =
 
     let word = 
         MultiAlign.consensusWord(malign, sim)
-        |> Array.map Program.formatNucl
+        |> Array.map formatNucl
         |> String.concat ""
 
     word |> shouldEqual expected
@@ -220,7 +220,7 @@ let ``Consensus word gives correct result`` (input: string, expected) =
 let formatMultiAlignment (a : MultiAlignment) =
     [0..Array2D.length1 a - 1]
     |> List.map (fun i -> a.[i,*])
-    |> List.map (Array.map Program.formatNucl)
+    |> List.map (Array.map formatNucl)
     |> List.map (String.concat "")
     |> String.concat Environment.NewLine
 

@@ -26,11 +26,10 @@ let split
 
 let printState(f,s) = 
     if verbose then
-        System.Console.Clear()
-        logV "%A" f
-        logV "%A" s
-        logV ""
-        System.Threading.Thread.Sleep(300)
+        printfn "Hirschberg running for sequences:"
+        printfn "%s" <| formatSeq (f |> Seq.map Nucl)
+        printfn "%s" <| formatSeq (s |> Seq.map Nucl)
+        printfn ""
 
 let run
     (f : Sequence, s: Sequence,sim' : Similarity')

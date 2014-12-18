@@ -42,12 +42,10 @@ type RunOperations = {
 }
 
 let printState(a) =
-    let formatT = function | NoTrace -> "." | Up -> "^" | Left -> "<" | Diagonal  -> "\\"
     if Types.verbose then
-        Console.Clear()
-        logV "Needleman-Wunsch state:"
-        logV "%A" (a |> Array2D.map (fun (d,t) -> formatT t, d))
-        Threading.Thread.Sleep(300)
+        printfn "Needleman-Wunsch array:"
+        a |> Array2D.map fst |> formatA2D
+        printfn ""
 
 let runGeneric
     (fstSeq : 'a[], sndSeq : 'a[], ops : RunOperations)
@@ -62,7 +60,7 @@ let runGeneric
                             fst array.[i-1,j] + ops.UpIndelCost(i-1), Up
                             fst array.[i,j-1]+ ops.LeftIndelCost(j-1), Left
                             ] |> List.maxBy fst
-            printState(array)
+            //printState(array)
 
     let rec traceBack (i,j,acc) =
         let trace = snd array.[i,j]

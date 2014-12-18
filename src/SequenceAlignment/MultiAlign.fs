@@ -86,6 +86,21 @@ let score (malign : MultiAlignment, sim : Similarity') : float =
     |> List.sumBy Array.sum
 
 
+let printState(maligns,distances) = 
+    if verbose then
+        maligns 
+        |> Array.iteri (fun i malign ->
+            printfn "Cluster %d:" i
+            formatMAlign malign
+            printfn "")
+
+        printfn ""
+        printfn "Distances: "
+        formatA2D distances
+        printfn ""
+        printfn ""
+
+
 let UPGMA(seqs : Sequence[], sim' : Similarity') : MultiAlignment = 
     
     let distances = 
@@ -99,6 +114,7 @@ let UPGMA(seqs : Sequence[], sim' : Similarity') : MultiAlignment =
                       distances.[i, j] <- if j < i then maxSim - value else System.Double.PositiveInfinity)
 
     let rec clusterize (maligns,distances) =
+        printState(maligns,distances)
         match maligns with
         | [||] -> failwith "maligns should not be empty"
         | [|malign|] -> malign

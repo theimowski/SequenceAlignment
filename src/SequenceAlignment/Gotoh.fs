@@ -17,19 +17,18 @@ let highest(arrays: list<ArrayCell<'a>[,]>, i, j) : ArrayCell<'a> =
 let inline addFst x (f,s) = f + x, s
 
 let private printState (a,b,c,s) =
-    let format = fst >> string >> (function | "-Infinity" -> "-i" | s -> s) >> sprintf "%5s"
     if Types.verbose then
-        Console.Clear()
-        logV "Gotoh arrays state"
-        logV "A:"
-        logV "%A" (a |> Array2D.map format)
-        logV "B:"
-        logV "%A" (b |> Array2D.map format)
-        logV "C:"
-        logV "%A" (c  |> Array2D.map format)
-        logV "S:"
-        logV "%A" (s  |> Array2D.map format)
-        Threading.Thread.Sleep(300)
+        printfn "Gotoh arrays state"
+        printfn "A:"
+        printfn "%A" (a |> Array2D.map fst |> formatA2D)
+        printfn "B:"
+        printfn "%A" (b |> Array2D.map fst |> formatA2D)
+        printfn "C:"
+        printfn "%A" (c  |> Array2D.map fst |> formatA2D)
+        printfn "S:"
+        printfn "%A" (s  |> Array2D.map fst |> formatA2D)
+        printfn ""
+        printfn ""
 
 let run 
     (fstSeq : Sequence, sndSeq : Sequence, sim : Similarity')
