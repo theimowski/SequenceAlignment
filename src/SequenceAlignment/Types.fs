@@ -36,15 +36,15 @@ let formatMAlign (malign: MultiAlignment) =
 
 let formatA2D (a: float[,]) = 
     [0..Array2D.length2 a - 1]
-    |> List.map (fun j -> sprintf "%9d" j)
-    |> List.append ["    "]
+    |> List.map (fun j -> sprintf "%13d" j)
+    |> List.append ["   "]
     |> String.concat ""
     |> printfn  "%s"
 
     [0..Array2D.length1 a - 1]
     |> List.map (fun i -> 
         a.[i,*] 
-        |> Array.map (sprintf "%3.3f") 
+        |> Array.map (sprintf "|%10f|") 
         |> Array.append [|sprintf "%3d:" i|]
         |> String.concat " ")
     |> String.concat Environment.NewLine

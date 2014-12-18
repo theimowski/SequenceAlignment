@@ -18,17 +18,18 @@ let inline addFst x (f,s) = f + x, s
 
 let private printState (a,b,c,s) =
     if Types.verbose then
+        Console.Clear()
         printfn "Gotoh arrays state"
         printfn "A:"
-        printfn "%A" (a |> Array2D.map fst |> formatA2D)
+        a |> Array2D.map fst |> formatA2D
         printfn "B:"
-        printfn "%A" (b |> Array2D.map fst |> formatA2D)
+        b |> Array2D.map fst |> formatA2D
         printfn "C:"
-        printfn "%A" (c  |> Array2D.map fst |> formatA2D)
+        c  |> Array2D.map fst |> formatA2D
         printfn "S:"
-        printfn "%A" (s  |> Array2D.map fst |> formatA2D)
-        printfn ""
-        printfn ""
+        s  |> Array2D.map fst |> formatA2D
+        printfn "%s" Environment.NewLine
+        do Threading.Thread.Sleep 100
 
 let run 
     (fstSeq : Sequence, sndSeq : Sequence, sim : Similarity')
