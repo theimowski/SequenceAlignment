@@ -76,13 +76,13 @@ Program requires similarity matrix on the standard input. Given:
 
 The similarity matrix is parsed to the following :
 
-| 	| A | C | G | T | - |
-| - | - | - | - | - | - |
-| A | 1 | 0 | 0 | 0 | 0 |
-| C | 0 | 1 | 0 | 0 | 0 |
-| G | 0 | 0 | 1 | 0 | 0 |
-| T | 0 | 0 | 0 | 1 | 0 |
-| - | 0 | 0 | 0 | 0 | 1 |
+   | A | C | G | T | -
+---|---|---|---|---|---
+ A | 1 | 0 | 0 | 0 | 0
+ C | 0 | 1 | 0 | 0 | 0
+ G | 0 | 0 | 1 | 0 | 0
+ T | 0 | 0 | 0 | 1 | 0
+ - | 0 | 0 | 0 | 0 | 1
 
 For *Gotoh*, there's no need to lookup similarity of ``-`` (a space) with other Nucleotide, because the algorithm uses the penalty function. Therefore for *Gotoh* command the **last line of the matrix is ignored**.
 
