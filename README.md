@@ -20,7 +20,7 @@ Application has been written in F#. Source code can be found on *GitHub*: [https
 
 Application manual
 ------------------
-This is a console app, to invoke it from command line:
+SequenceAlignment is a console app, command line invocation:
 
 	SequenceAlignment.exe <command> [-v|--verbose]
 

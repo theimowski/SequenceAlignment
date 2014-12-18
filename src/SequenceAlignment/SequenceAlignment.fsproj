@@ -72,10 +72,16 @@
     <Compile Include="MultiAlign.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
-    <None Include="input">
+    <None Include="in_malign">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="in_m">
+    <None Include="in_pr">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="in_upgma">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="in_2">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

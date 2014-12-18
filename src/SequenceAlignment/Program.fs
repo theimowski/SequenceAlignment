@@ -70,7 +70,7 @@ let readMultiAlignment() : MultiAlignment =
 let main argv = 
 
 #if DEBUG
-    use _in = new IO.StreamReader("input")
+    use _in = new IO.StreamReader("in_2")
     Console.SetIn(_in)
 #endif
     
