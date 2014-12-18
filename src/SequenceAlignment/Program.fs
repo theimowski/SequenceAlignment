@@ -2,23 +2,6 @@
 
 open System
 
-let formatNucl = function
-    | Break -> "-"
-    | Nucl x -> 
-        match x with
-        | A -> "A"
-        | C -> "C"
-        | G -> "G"
-        | T -> "T"
-
-let formatSeq = List.map formatNucl >> String.concat ""
-
-let formatOutput (alignment, sequence) = 
-    let f,s = sequence |> List.unzip
-    f |> formatSeq |> printfn "%s"
-    s |> formatSeq |> printfn "%s"
-    printfn "similarity: %f" alignment
-
 let parse = function
     | 'A' -> Some A
     | 'C' -> Some C
@@ -66,13 +49,45 @@ let readMultiAlignment() : MultiAlignment =
             line := Console.ReadLine()
     } |> array2D
 
+
+
+let formatNucl = function
+| Break -> "-"
+| Nucl x -> 
+    match x with
+    | A -> "A"
+    | C -> "C"
+    | G -> "G"
+    | T -> "T"
+
+let formatSeq (x: seq<Nucleotide'>) = x |> Seq.map formatNucl |> String.concat ""
+
+let formatOutput (alignment, sequence) = 
+    let f,s = sequence |> List.unzip
+    f |> formatSeq |> printfn "%s"
+    s |> formatSeq |> printfn "%s"
+    printfn "similarity: %f" alignment
+
+let formatMAlign (malign: MultiAlignment) = 
+    [0..Array2D.length1 malign - 1]
+    |> List.map (fun i -> malign.[i,*] |> formatSeq)
+    |> String.concat Environment.NewLine
+    |> printfn "%s"
+
+let formatProfile (profile : MultiAlignmentProfile) = 
+    profile
+    |> Array.mapi (fun i map -> sprintf "%3d: %.5f %.5f %.5f %.5f %.5f" i map.[Nucl A] map.[Nucl C] map.[Nucl G] map.[Nucl T] map.[Break])
+    |> Array.append [| sprintf "     %7s %7s %7s %7s %7s" "A" "C" "G" "T" "-" |]
+    |> String.concat Environment.NewLine
+    |> printfn "%s"
+
 [<EntryPoint>]
 let main argv = 
 
-#if DEBUG
-    use _in = new IO.StreamReader("in_2")
+//#if DEBUG
+    use _in = new IO.StreamReader("in_pr")
     Console.SetIn(_in)
-#endif
+//#endif
     
     Types.verbose <- 
         argv |> Array.exists ((=) "-v") ||
@@ -88,13 +103,13 @@ let main argv =
     | "Hirschberg" :: _ ->
         Hirschberg.run(readSequence(), readSequence(), sim) |> formatOutput
     | "profile" :: _ -> 
-        MultiAlign.profile(readMultiAlignment()) |> printfn "%A"
+        MultiAlign.profile(readMultiAlignment()) |> formatProfile
     | "cons" :: _ ->
-        MultiAlign.consensusWord(readMultiAlignment(), sim) |> printfn "%A"
+        MultiAlign.consensusWord(readMultiAlignment(), sim) |> formatSeq |> printfn "%s"
     | "malign" :: _ -> 
-        MultiAlign.alignByProfiles(readMultiAlignment(), readMultiAlignment(), sim) |> printfn "%A"
+        MultiAlign.alignByProfiles(readMultiAlignment(), readMultiAlignment(), sim) |> formatMAlign
     | "UPGMA" :: _ ->
-        MultiAlign.UPGMA(readSequences(), sim) |> printfn "%A"
+        MultiAlign.UPGMA(readSequences(), sim) |> formatMAlign
 
     | _ -> printfn "usage: SequenceAlignment.exe <command> [-v|--verbose]"
            printfn """
