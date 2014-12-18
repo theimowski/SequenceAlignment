@@ -31,7 +31,7 @@ let readSequences() =
     } |> Seq.toArray
 
 let readSimilarity() : Similarity' =
-    let parseLine (s:string) = s.Split([|';'|]) |> Array.map float
+    let parseLine (s:string) = s.Split([|';'|],StringSplitOptions.RemoveEmptyEntries) |> Array.map (fun s -> s.Trim() |> float)
     let lookup = 
         [Nucl A;Nucl C;Nucl G;Nucl T;Break] 
         |> List.map (fun n -> n, Console.ReadLine() |> parseLine)
@@ -48,8 +48,6 @@ let readMultiAlignment() : MultiAlignment =
             yield line.Value.ToCharArray() |> Array.map parse'
             line := Console.ReadLine()
     } |> array2D
-
-
 
 
 
@@ -71,10 +69,10 @@ let formatProfile (profile : MultiAlignmentProfile) =
 [<EntryPoint>]
 let main argv = 
 
-//#if DEBUG
+#if DEBUG
     use _in = new IO.StreamReader("in_2")
     Console.SetIn(_in)
-//#endif
+#endif
     
     Types.verbose <- 
         argv |> Array.exists ((=) "-v") ||
